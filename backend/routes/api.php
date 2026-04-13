@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\UserController;
+use App\Http\Controllers\Api\V1\PanneauController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
@@ -48,6 +49,7 @@ Route::prefix('v1')->group(function () {
         // C'est ici que l'Agent sera bloqué (Erreur 403)
         Route::middleware('role:super_admin|gestionnaire')->group(function () {
             Route::apiResource('users', UserController::class);
+            Route::apiResource('panneaux', PanneauController::class);
         });
 
         // --- ROUTES DE TEST RBAC ---

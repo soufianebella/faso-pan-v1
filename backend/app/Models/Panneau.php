@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Builder;
 class Panneau extends Model
 {
     use SoftDeletes;
+    protected $table = 'panneaux';
     protected $fillable = [
         'reference',
         'pays',
@@ -24,6 +25,7 @@ class Panneau extends Model
         'eclaire',
         'hauteur_mat',
         'statut',
+        'created_by',
     ];
     protected $casts = [
         'eclaire'   => 'boolean',
