@@ -10,6 +10,7 @@ validée pour ce projet académique.
 super_admin  : toutes les permissions
 gestionnaire : panneaux, campagnes, taches, gerer utilisateurs
 agent_terrain: voir panneaux, voir faces, taches.own.validate
+annonceur     : voir campagnes (lecture seule — ses campagnes uniquement)
 
 Vérification : $this->authorize() dans chaque Controller
                authorize() dans chaque FormRequest

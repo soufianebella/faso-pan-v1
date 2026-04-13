@@ -86,6 +86,7 @@
           >
             <option value="agent_terrain">Agent Terrain</option>
             <option value="gestionnaire">Gestionnaire</option>
+            <option value="annonceur">Annonceur</option>
             <option value="super_admin">Super Administrateur</option>
           </select>
           <p v-if="errors?.role"

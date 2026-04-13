@@ -119,6 +119,7 @@ const ROLE_COLORS = {
   'super_admin':   '#1e293b',
   'gestionnaire':  '#1B3B8A',
   'agent_terrain': '#F97316',
+  'annonceur':     '#059669'
 }
 
 function getRoleColor(role) {
@@ -139,6 +140,7 @@ function formatRole(role) {
     'super_admin':   'Super Admin',
     'gestionnaire':  'Gestionnaire',
     'agent_terrain': 'Agent Terrain',
+    'annonceur':     'Annonceur'
   }
   return labels[role] ?? role
 }

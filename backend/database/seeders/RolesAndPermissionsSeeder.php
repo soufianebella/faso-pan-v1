@@ -6,7 +6,6 @@ use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
-use Illuminate\Support\Facades\Hash;
 use App\Models\User;
 
 class RolesAndPermissionsSeeder extends Seeder
@@ -28,7 +27,8 @@ class RolesAndPermissionsSeeder extends Seeder
             'voir faces',
             'modifier face',
             'assigner campagne',
-            'gerer utilisateurs'
+            'gerer utilisateurs',
+            'voir campagnes'
         ];
         foreach ($Permissions as $permission) {
             Permission::firstOrCreate(['name' => $permission, 'guard_name' => 'web']);
@@ -51,8 +51,13 @@ class RolesAndPermissionsSeeder extends Seeder
         $roleAgent = Role::firstOrCreate(['name' => 'agent_terrain']);
         $roleAgent->givePermissionTo(['voir panneaux', 'voir faces', 'modifier face']);
 
+        $annonceur = Role::firstOrCreate(['name' => 'annonceur']);
+        $annonceur->givePermissionTo([
+            'voir campagnes', // lecture seule sur ses campagnes
+        ]);
+
         // utilisateur de test
-        $userData= [
+        $userData = [
             [
                 'name'  => 'Admin Fasopan',
                 'email' => 'admin@fasopan.bf',
@@ -84,8 +89,5 @@ class RolesAndPermissionsSeeder extends Seeder
             // On synchronise le rôle (évite les doublons si on relance le seeder)
             $user->syncRoles([$data['role']]);
         }
-
-
-
     }
 }
