@@ -1,40 +1,22 @@
 <template>
-  <div
-    v-if="show"
-    class="fixed inset-0 z-50 flex items-center justify-center"
-    style="background-color: rgba(15, 23, 42, 0.7)"
-    @click.self="$emit('close')"
-  >
-    <div
-      class="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden"
-    >
+  <div v-if="show" class="fixed inset-0 z-50 flex items-center justify-center"
+    style="background-color: rgba(15, 23, 42, 0.7)" @click.self="$emit('close')">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden">
       <!-- Header -->
-      <div
-        class="p-4 border-b flex justify-between items-center"
-        style="border-color: #e5e7eb"
-      >
+      <div class="p-4 border-b flex justify-between items-center" style="border-color: #e5e7eb">
         <h2 class="text-xl font-bold" style="color: #1b3b8a">
           {{ isEditMode ? "Modifier le panneau" : "Nouveau panneau" }}
         </h2>
-        <button
-          @click="$emit('close')"
-          class="p-1 rounded-full hover:bg-slate-100 transition-colors"
-        >
+        <button @click="$emit('close')" class="p-1 rounded-full hover:bg-slate-100 transition-colors">
           <i class="fa-solid fa-xmark text-xl" style="color: #6b7280"></i>
         </button>
       </div>
 
       <!-- Formulaire -->
-      <form
-        @submit.prevent="handleSubmit"
-        class="p-6 overflow-y-auto space-y-8 flex-1"
-      >
+      <form @submit.prevent="handleSubmit" class="p-6 overflow-y-auto space-y-8 flex-1">
         <!-- Section 1 — Infos générales -->
         <section>
-          <h3
-            class="text-xs font-bold uppercase tracking-wider mb-4"
-            style="color: #f97316"
-          >
+          <h3 class="text-xs font-bold uppercase tracking-wider mb-4" style="color: #f97316">
             1. Informations générales
           </h3>
 
@@ -43,28 +25,16 @@
               <label class="text-xs font-medium" style="color: #374151">
                 Reference
               </label>
-              <input
-                v-model="form.reference"
-                type="text"
-                :disabled="isEditMode"
-                class="w-full border rounded px-3 py-2 text-sm outline-none transition-all disabled:bg-gray-50"
-                :style="
-                  errors?.reference
-                    ? 'border-color: #EF4444'
-                    : 'border-color: #E5E7EB'
-                "
-                @focus="$event.target.style.borderColor = '#F97316'"
-                @blur="
-                  $event.target.style.borderColor = errors?.reference
-                    ? '#EF4444'
-                    : '#E5E7EB'
-                "
-              />
-              <p
-                v-if="errors?.reference"
-                class="text-xs"
-                style="color: #ef4444"
-              >
+              <input v-model="form.reference" type="text" :disabled="isEditMode"
+                class="w-full border rounded px-3 py-2 text-sm outline-none transition-all disabled:bg-gray-50" :style="errors?.reference
+                  ? 'border-color: #EF4444'
+                  : 'border-color: #E5E7EB'
+                  " @focus="$event.target.style.borderColor = '#F97316'" @blur="
+                    $event.target.style.borderColor = errors?.reference
+                      ? '#EF4444'
+                      : '#E5E7EB'
+                    " />
+              <p v-if="errors?.reference" class="text-xs" style="color: #ef4444">
                 {{ errors.reference[0] }}
               </p>
             </div>
@@ -73,22 +43,15 @@
               <label class="text-xs font-medium" style="color: #374151">
                 Ville
               </label>
-              <input
-                v-model="form.ville"
-                type="text"
-                class="w-full border rounded px-3 py-2 text-sm outline-none transition-all"
-                :style="
-                  errors?.ville
-                    ? 'border-color: #EF4444'
-                    : 'border-color: #E5E7EB'
-                "
-                @focus="$event.target.style.borderColor = '#F97316'"
-                @blur="
-                  $event.target.style.borderColor = errors?.ville
-                    ? '#EF4444'
-                    : '#E5E7EB'
-                "
-              />
+              <input v-model="form.ville" type="text"
+                class="w-full border rounded px-3 py-2 text-sm outline-none transition-all" :style="errors?.ville
+                  ? 'border-color: #EF4444'
+                  : 'border-color: #E5E7EB'
+                  " @focus="$event.target.style.borderColor = '#F97316'" @blur="
+                    $event.target.style.borderColor = errors?.ville
+                      ? '#EF4444'
+                      : '#E5E7EB'
+                    " />
               <p v-if="errors?.ville" class="text-xs" style="color: #ef4444">
                 {{ errors.ville[0] }}
               </p>
@@ -98,63 +61,40 @@
               <label class="text-xs font-medium" style="color: #374151">
                 Quartier
               </label>
-              <input
-                v-model="form.quartier"
-                type="text"
-                class="w-full border rounded px-3 py-2 text-sm outline-none"
-                style="border-color: #e5e7eb"
-              />
+              <input v-model="form.quartier" type="text" class="w-full border rounded px-3 py-2 text-sm outline-none"
+                style="border-color: #e5e7eb" />
             </div>
 
             <div class="space-y-1">
               <label class="text-xs font-medium" style="color: #374151">
                 Hauteur mat (m)
               </label>
-              <input
-                v-model="form.hauteur_mat"
-                type="number"
-                step="0.1"
-                min="0"
-                class="w-full border rounded px-3 py-2 text-sm outline-none"
-                style="border-color: #e5e7eb"
-              />
+              <input v-model="form.hauteur_mat" type="number" step="0.1" min="0"
+                class="w-full border rounded px-3 py-2 text-sm outline-none" style="border-color: #e5e7eb" />
             </div>
 
             <div class="space-y-1">
               <label class="text-xs font-medium" style="color: #374151">
                 Latitude
               </label>
-              <input
-                v-model="form.latitude"
-                type="number"
-                step="any"
-                class="w-full border rounded px-3 py-2 text-sm outline-none"
-                style="border-color: #e5e7eb"
-              />
+              <input v-model="form.latitude" type="number" step="any"
+                class="w-full border rounded px-3 py-2 text-sm outline-none" style="border-color: #e5e7eb" />
             </div>
 
             <div class="space-y-1">
               <label class="text-xs font-medium" style="color: #374151">
                 Longitude
               </label>
-              <input
-                v-model="form.longitude"
-                type="number"
-                step="any"
-                class="w-full border rounded px-3 py-2 text-sm outline-none"
-                style="border-color: #e5e7eb"
-              />
+              <input v-model="form.longitude" type="number" step="any"
+                class="w-full border rounded px-3 py-2 text-sm outline-none" style="border-color: #e5e7eb" />
             </div>
 
             <div class="space-y-1">
               <label class="text-xs font-medium" style="color: #374151">
                 Statut
               </label>
-              <select
-                v-model="form.statut"
-                class="w-full border rounded px-3 py-2 text-sm outline-none bg-white"
-                style="border-color: #e5e7eb"
-              >
+              <select v-model="form.statut" class="w-full border rounded px-3 py-2 text-sm outline-none bg-white"
+                style="border-color: #e5e7eb">
                 <option value="actif">Actif</option>
                 <option value="maintenance">Maintenance</option>
                 <option value="hors_service">Hors Service</option>
@@ -162,17 +102,8 @@
             </div>
 
             <div class="flex items-center gap-2 pt-5">
-              <input
-                type="checkbox"
-                v-model="form.eclaire"
-                id="eclaire"
-                class="rounded"
-              />
-              <label
-                for="eclaire"
-                class="text-sm font-medium"
-                style="color: #374151"
-              >
+              <input type="checkbox" v-model="form.eclaire" id="eclaire" class="rounded" />
+              <label for="eclaire" class="text-sm font-medium" style="color: #374151">
                 Eclairage present
               </label>
             </div>
@@ -182,54 +113,38 @@
         <!-- Section 2 — Faces -->
         <section>
           <div class="flex justify-between items-center mb-4">
-            <h3
-              class="text-xs font-bold uppercase tracking-wider"
-              style="color: #f97316"
-            >
+            <h3 class="text-xs font-bold uppercase tracking-wider" style="color: #f97316">
               2. Faces du panneau
             </h3>
-            <button
-              v-if="!isEditMode"
-              type="button"
-              @click="ajouterFace"
+            <button v-if="!isEditMode" type="button" @click="ajouterFace"
               class="text-xs font-bold px-3 py-1 rounded border transition-colors hover:bg-orange-50"
-              style="border-color: #f97316; color: #f97316"
-            >
+              style="border-color: #f97316; color: #f97316">
               <i class="fa-solid fa-plus mr-1"></i>
               Ajouter une face
             </button>
           </div>
 
-          <div
-            v-if="isEditMode"
-            class="mb-3 px-3 py-2 rounded text-xs"
-            style="background-color: #fef3dc; color: #7a5010"
-          >
+          <div v-if="isEditMode" class="mb-3 px-3 py-2 rounded text-xs"
+            style="background-color: #fef3dc; color: #7a5010">
             <i class="fa-solid fa-triangle-exclamation mr-1"></i>
             Les faces ne sont pas modifiables apres creation (contrats
             potentiels en cours).
           </div>
 
           <div class="space-y-3">
-            <div
-              v-for="(face, index) in form.faces"
-              :key="index"
-              class="flex items-center gap-4 p-3 rounded border"
+            <div v-for="(face, index) in form.faces" :key="index" class="flex items-center gap-4 p-3 rounded border"
               :style="{
                 backgroundColor: isEditMode ? '#F9FAFB' : '#FAFAFA',
                 borderColor: '#E5E7EB',
                 opacity: isEditMode ? '0.7' : '1',
-              }"
-            >
+              }">
               <!-- Numero de face -->
-              <div
-                class="w-9 h-9 flex items-center justify-center rounded-full border text-sm font-bold flex-shrink-0"
+              <div class="w-9 h-9 flex items-center justify-center rounded-full border text-sm font-bold flex-shrink-0"
                 style="
                   border-color: #1b3b8a;
                   color: #1b3b8a;
                   background-color: #ebf3fc;
-                "
-              >
+                ">
                 {{ face.numero }}
               </div>
 
@@ -238,20 +153,10 @@
                 <label class="text-xs uppercase" style="color: #6b7280">
                   Largeur (m)
                 </label>
-                <input
-                  v-model="face.largeur"
-                  type="number"
-                  step="0.1"
-                  min="0.5"
-                  :disabled="isEditMode"
+                <input v-model="face.largeur" type="number" step="0.1" min="0.5" :disabled="isEditMode"
                   class="w-full border rounded px-2 py-1.5 text-sm outline-none disabled:bg-gray-100"
-                  style="border-color: #e5e7eb"
-                />
-                <p
-                  v-if="errors?.[`faces.${index}.largeur`]"
-                  class="text-xs"
-                  style="color: #ef4444"
-                >
+                  style="border-color: #e5e7eb" />
+                <p v-if="errors?.[`faces.${index}.largeur`]" class="text-xs" style="color: #ef4444">
                   {{ errors[`faces.${index}.largeur`][0] }}
                 </p>
               </div>
@@ -261,25 +166,14 @@
                 <label class="text-xs uppercase" style="color: #6b7280">
                   Hauteur (m)
                 </label>
-                <input
-                  v-model="face.hauteur"
-                  type="number"
-                  step="0.1"
-                  min="0.5"
-                  :disabled="isEditMode"
+                <input v-model="face.hauteur" type="number" step="0.1" min="0.5" :disabled="isEditMode"
                   class="w-full border rounded px-2 py-1.5 text-sm outline-none disabled:bg-gray-100"
-                  style="border-color: #e5e7eb"
-                />
+                  style="border-color: #e5e7eb" />
               </div>
 
               <!-- Bouton supprimer -->
-              <button
-                v-if="!isEditMode && form.faces.length > 1"
-                type="button"
-                @click="supprimerFace(index)"
-                class="p-2 rounded transition-colors hover:bg-red-50 flex-shrink-0"
-                style="color: #ef4444"
-              >
+              <button v-if="!isEditMode && form.faces.length > 1" type="button" @click="supprimerFace(index)"
+                class="p-2 rounded transition-colors hover:bg-red-50 flex-shrink-0" style="color: #ef4444">
                 <i class="fa-solid fa-trash-can"></i>
               </button>
             </div>
@@ -288,29 +182,15 @@
       </form>
 
       <!-- Footer -->
-      <div
-        class="p-4 border-t flex justify-end gap-3"
-        style="border-color: #e5e7eb; background-color: #f9fafb"
-      >
-        <button
-          type="button"
-          @click="$emit('close')"
-          class="px-4 py-2 text-sm font-medium rounded-lg transition-colors hover:bg-slate-100"
-          style="color: #374151"
-        >
+      <div class="p-4 border-t flex justify-end gap-3" style="border-color: #e5e7eb; background-color: #f9fafb">
+        <button type="button" @click="$emit('close')"
+          class="px-4 py-2 text-sm font-medium rounded-lg transition-colors hover:bg-slate-100" style="color: #374151">
           Annuler
         </button>
-        <button
-          type="button"
-          @click="handleSubmit"
-          :disabled="isLoading"
+        <button type="button" @click="handleSubmit" :disabled="isLoading"
           class="px-6 py-2 rounded-lg text-white text-sm font-bold shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          style="background-color: #f97316"
-        >
-          <i
-            v-if="isLoading"
-            class="fa-solid fa-circle-notch animate-spin mr-1"
-          ></i>
+          style="background-color: #f97316">
+          <i v-if="isLoading" class="fa-solid fa-circle-notch animate-spin mr-1"></i>
           {{ isEditMode ? "Mettre a jour" : "Enregistrer le panneau" }}
         </button>
       </div>

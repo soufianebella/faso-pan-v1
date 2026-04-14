@@ -72,8 +72,8 @@ class PanneauService
         $query = Panneau::with(['faces'])
             ->withCount([
                 'faces',
-                'faces as faces_libres_count' => fn ($q) =>
-                    $q->where('statut', 'libre'),
+                'faces as faces_libres_count' => fn($q) =>
+                $q->where('statut', 'libre'),
             ]);
 
         if (!empty($filtres['ville'])) {
@@ -91,8 +91,8 @@ class PanneauService
         if (!empty($filtres['search'])) {
             $query->where(function ($q) use ($filtres) {
                 $q->where('reference', 'like', "%{$filtres['search']}%")
-                  ->orWhere('ville', 'like', "%{$filtres['search']}%")
-                  ->orWhere('quartier', 'like', "%{$filtres['search']}%");
+                    ->orWhere('ville', 'like', "%{$filtres['search']}%")
+                    ->orWhere('quartier', 'like', "%{$filtres['search']}%");
             });
         }
 

@@ -43,17 +43,17 @@ Semaine 2 — TERMINÉE
    Session 8  : Modélisation panneaux validée
    Session 9  : CRUD Panneaux backend
    Session 10 : Frontend Panneaux
-
-Semaine 4 — À DÉMARRER
-   Session 11 : Modèle réservation (Affectations)
-   Session 12 : Logique anti double-booking (CRITIQUE)
+Semaine 4 — EN COURS
+   Session 11 : Modèle réservation validé
+   Session 12 : Anti double-booking (5/5 tests)
    Session 13 : Transactions DB
-   Session 14 : Frontend réservation
+   Session 14 : Frontend Campagnes
 
 Bugs résolus — ajout :
   - apiResource nom pluriel → ->parameters(['panneaux' => 'panneau'])
   - Route Model Binding dans FormRequest →
     instanceof check avant ->id
+  - Campagne : created_by dans $fillable
 ## Bugs résolus — à garder en mémoire
   - Controller.php doit utiliser AuthorizesRequests (pas Authorizable)
   - Route login doit avoir ->name('login')

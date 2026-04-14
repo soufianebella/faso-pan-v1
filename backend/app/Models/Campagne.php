@@ -17,7 +17,7 @@ class Campagne extends Model
         'nom', 'annonceur', 'description',
         'date_debut', 'date_fin',
         'affiche_path', 'statut',
-        // created_by : assigné manuellement, pas depuis HTTP
+        'created_by' // assigné manuellement, pas depuis HTTP
     ];
 
     protected $casts = [

@@ -8,6 +8,8 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Schema;
 use App\Models\Panneau;
 use App\Policies\PanneauPolicy;
+use App\Models\Campagne;
+use App\Policies\CampagnePolicy;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -27,5 +29,6 @@ class AppServiceProvider extends ServiceProvider
         Schema::defaultStringLength(191);
         Gate::policy(User::class, UserPolicy::class);
         Gate::policy(Panneau::class, PanneauPolicy::class);
+        Gate::policy(Campagne::class, CampagnePolicy::class);
     }
 }
