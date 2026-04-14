@@ -39,45 +39,42 @@ Route::prefix('v1')->group(function () {
         ->name('v1.login');
 
     // --- Routes Protégées (Auth obligatoire) ---
+    
     Route::middleware('auth:sanctum')->group(function () {
 
-        // Actions communes
-        Route::post('/logout', [AuthController::class, 'logout']);
-        Route::get('/me',      [AuthController::class, 'me'])->name('v1.me');
+    Route::post('/logout', [AuthController::class, 'logout']);
+    Route::get('/me',      [AuthController::class, 'me'])->name('v1.me');
 
-        // --- ZONE ADMIN & GESTIONNAIRE UNIQUEMENT ---
-        // C'est ici que l'Agent sera bloqué (Erreur 403)
-        Route::middleware('role:super_admin|gestionnaire')->group(function () {
-            Route::apiResource('users', UserController::class);
-            Route::apiResource('panneaux', PanneauController::class);
-        });
+    Route::middleware('role:super_admin|gestionnaire')->group(function () {
+        Route::apiResource('users', UserController::class);
 
-        // --- ROUTES DE TEST RBAC ---
-
-        // Uniquement super_admin
-        Route::middleware('role:super_admin')
-            ->get('/admin/test', function (Request $request) {
-                return response()->json([
-                    'message' => 'Accès autorisé - Niveau Super Admin',
-                    'role'    => $request->user()->getRoleNames()->first(),
-                ]);
-            });
-
-        // Super_admin OU gestionnaire
-        Route::middleware('role:super_admin|gestionnaire')
-            ->get('/gestionnaire/test', function (Request $request) {
-                return response()->json([
-                    'message' => 'Accès autorisé - Niveau Gestionnaire',
-                    'role'    => $request->user()->getRoleNames()->first(),
-                ]);
-            });
-
-        // Tout utilisateur connecté (Agent inclus)
-        Route::get('/agent/test', function (Request $request) {
-            return response()->json([
-                'message' => 'Accès autorisé - Niveau Agent',
-                'role'    => $request->user()->getRoleNames()->first(),
-            ]);
-        });
+        Route::apiResource('panneaux', PanneauController::class)
+             ->parameters(['panneaux' => 'panneau']);
     });
+
+    Route::middleware('role:super_admin')
+         ->get('/admin/test', function (Request $request) {
+             return response()->json([
+                 'message' => 'Acces autorise - Niveau Super Admin',
+                 'role'    => $request->user()->getRoleNames()->first(),
+             ]);
+         });
+
+    Route::middleware('role:super_admin|gestionnaire')
+         ->get('/gestionnaire/test', function (Request $request) {
+             return response()->json([
+                 'message' => 'Acces autorise - Niveau Gestionnaire',
+                 'role'    => $request->user()->getRoleNames()->first(),
+             ]);
+         });
+
+    Route::get('/agent/test', function (Request $request) {
+        return response()->json([
+            'message' => 'Acces autorise - Niveau Agent',
+            'role'    => $request->user()->getRoleNames()->first(),
+        ]);
+    });
+});
+
+
 });

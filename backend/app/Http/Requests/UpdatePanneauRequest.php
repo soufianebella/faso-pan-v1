@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
+use App\Models\Panneau;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -16,12 +17,19 @@ class UpdatePanneauRequest extends FormRequest
 
     public function rules(): array
     {
-        $panneauId = $this->route('panneau')->id;
+        $panneau   = $this->route('panneau');
+        $panneauId = $panneau instanceof Panneau
+            ? $panneau->id
+            : $panneau;
 
         return [
-            'reference'   => ['sometimes', 'required', 'string', 'max:50',
-                               Rule::unique('panneaux', 'reference')
-                                   ->ignore($panneauId)],
+            'reference'   => [
+                'sometimes',
+                'required',
+                'string',
+                'max:50',
+                Rule::unique('panneaux', 'reference')->ignore($panneauId),
+            ],
             'pays'        => ['nullable', 'string', 'max:100'],
             'ville'       => ['sometimes', 'required', 'string', 'max:100'],
             'quartier'    => ['nullable', 'string', 'max:150'],
@@ -30,9 +38,11 @@ class UpdatePanneauRequest extends FormRequest
             'longitude'   => ['nullable', 'numeric', 'between:-180,180'],
             'eclaire'     => ['nullable', 'boolean'],
             'hauteur_mat' => ['nullable', 'numeric', 'min:0'],
-            'statut'      => ['nullable',
-                               Rule::in(['actif', 'maintenance', 'hors_service'])],
-            // Les faces ne sont pas modifiables après création
+            'statut'      => [
+                'nullable',
+                Rule::in(['actif', 'maintenance', 'hors_service']),
+            ],
         ];
     }
+    //mettre à jour les règles de validation pour le champ 'statut' en utilisant Rule::in() pour spécifier les valeurs autorisée
 }

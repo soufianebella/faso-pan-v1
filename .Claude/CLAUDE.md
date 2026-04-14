@@ -39,12 +39,21 @@ Semaine 2 — TERMINÉE
    Session 5 : CRUD Users backend
    Session 6 : UserPolicy
    Session 7 : Frontend Users (liste, création, modification)
-
-Semaine 3 — À DÉMARRER
-   Session 8  : Modélisation panneaux
+ Semaine 3 — TERMINÉE
+   Session 8  : Modélisation panneaux validée
    Session 9  : CRUD Panneaux backend
    Session 10 : Frontend Panneaux
 
+Semaine 4 — À DÉMARRER
+   Session 11 : Modèle réservation (Affectations)
+   Session 12 : Logique anti double-booking (CRITIQUE)
+   Session 13 : Transactions DB
+   Session 14 : Frontend réservation
+
+Bugs résolus — ajout :
+  - apiResource nom pluriel → ->parameters(['panneaux' => 'panneau'])
+  - Route Model Binding dans FormRequest →
+    instanceof check avant ->id
 ## Bugs résolus — à garder en mémoire
   - Controller.php doit utiliser AuthorizesRequests (pas Authorizable)
   - Route login doit avoir ->name('login')

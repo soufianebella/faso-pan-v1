@@ -6,8 +6,8 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StorePanneauRequest;
-use App\Http\Requests\UpdatePanneauRequest;
 use App\Http\Resources\PanneauResource;
+use App\Http\Requests\UpdatePanneauRequest;
 use App\Models\Panneau;
 use App\Services\PanneauService;
 use Illuminate\Http\JsonResponse;
@@ -49,18 +49,18 @@ class PanneauController extends Controller
             $panneau->load('faces')
         );
     }
+// 
+public function update(UpdatePanneauRequest $request, Panneau $panneau): JsonResponse
+{
+    $this->authorize('update', $panneau);
 
-    public function update(UpdatePanneauRequest $request, Panneau $panneau): PanneauResource
-    {
-        $this->authorize('update', $panneau);
+    $panneau = $this->panneauService->update(
+        $panneau,
+        $request->validated()
+    );
 
-        $panneau = $this->panneauService->update(
-            $panneau,
-            $request->validated()
-        );
-
-        return new PanneauResource($panneau);
-    }
+    return response()->json(new PanneauResource($panneau));
+}
 
     public function destroy(Panneau $panneau): JsonResponse
     {
