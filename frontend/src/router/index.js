@@ -42,6 +42,11 @@ const routes = [
         name: "statistiques",
         component: () => import("@/views/statistiques/StatistiquesView.vue"),
       },
+      {
+        path: "campagnes",
+        name: "campagnes",
+        component: () => import("@/views/campagnes/CampagnesView.vue"),
+      },
     ],
   },
   {

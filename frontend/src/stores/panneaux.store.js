@@ -4,7 +4,7 @@ import { panneauxApi }   from '@/api/panneaux.api'
 
 export const usePanneauxStore = defineStore('panneaux', () => {
 
-  // ── State ──────────────────────────────────────────────────────
+  // ── State 
   const panneaux      = ref([])
   const panneauActuel = ref(null)
   const isLoading     = ref(false)

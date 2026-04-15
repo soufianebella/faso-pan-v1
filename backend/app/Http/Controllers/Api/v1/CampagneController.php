@@ -25,10 +25,17 @@ class CampagneController extends Controller
     {
         $this->authorize('viewAny', Campagne::class);
 
-        $campagnes = Campagne::with([
-                'affectations.face.panneau',
-            ])
+        $campagnes = Campagne::with(['affectations.face.panneau'])
             ->withCount('affectations')
+            ->when(
+                $request->search,
+                fn($q, $v) => $q->where('nom', 'like', "%{$v}%")
+                    ->orWhere('annonceur', 'like', "%{$v}%")
+            )
+            ->when(
+                $request->statut,
+                fn($q, $v) => $q->where('statut', $v)
+            )
             ->latest()
             ->paginate(15);
 
