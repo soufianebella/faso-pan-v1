@@ -18,6 +18,11 @@ class FaceResource extends JsonResource
             'hauteur' => $this->hauteur,
             'surface' => $this->surface,
             'statut'  => $this->statut,
+            'panneau' => $this->whenLoaded('panneau', fn () => [
+                'id'        => $this->panneau->id,
+                'reference' => $this->panneau->reference,
+                'ville'     => $this->panneau->ville,
+            ]),
         ];
     }
 }

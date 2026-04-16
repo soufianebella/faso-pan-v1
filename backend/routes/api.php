@@ -1,20 +1,14 @@
 <?php
 
 use App\Http\Controllers\Api\V1\AuthController;
-use App\Http\Controllers\Api\V1\UserController;
-use App\Http\Controllers\Api\V1\PanneauController;
 use App\Http\Controllers\Api\V1\CampagneController;
-use Illuminate\Http\Request;
+use App\Http\Controllers\Api\V1\PanneauController;
+use App\Http\Controllers\Api\V1\TacheController;
+use App\Http\Controllers\Api\V1\UserController;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 
-/*
-|--------------------------------------------------------------------------
-| API Routes - FASO PAN 
-|--------------------------------------------------------------------------
-*/
-
-// --- Route de Santé (Health Check) ---
+// ── Health Check 
 Route::get('/test', function () {
     $dbConnected = false;
     try {
@@ -25,7 +19,7 @@ Route::get('/test', function () {
     }
     return response()->json([
         'status'          => $dbConnected ? 'success' : 'error',
-        'message'         => 'API FASO PAN opérationnelle',
+        'message'         => 'API FASO PAN operationnelle',
         'laravel_version' => app()->version(),
         'php_version'     => PHP_VERSION,
         'db_connected'    => $dbConnected,
@@ -34,51 +28,60 @@ Route::get('/test', function () {
 
 Route::prefix('v1')->group(function () {
 
-    // --- Routes Publiques ---
+    // ── Route publique 
     Route::post('/login', [AuthController::class, 'login'])
         ->middleware('throttle:5,1')
-        ->name('v1.login');
+        ->name('login');
 
-    // --- Routes Protégées (Auth obligatoire) ---
-
+    // ── Routes authentifiées 
     Route::middleware('auth:sanctum')->group(function () {
 
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::get('/me',      [AuthController::class, 'me'])->name('v1.me');
+        Route::put('/me',      [AuthController::class, 'updateProfile']);
 
-        Route::middleware('role:super_admin|gestionnaire')->group(function () {
+        // ── Super Admin seulement 
+        Route::middleware('role:super_admin')->group(function () {
             Route::apiResource('users', UserController::class);
+        });
+
+        // ── Admin + Gestionnaire 
+        Route::middleware('role:super_admin|gestionnaire')->group(function () {
 
             Route::apiResource('panneaux', PanneauController::class)
                 ->parameters(['panneaux' => 'panneau']);
+
             Route::apiResource('campagnes', CampagneController::class)
                 ->parameters(['campagnes' => 'campagne']);
 
-            Route::get('/faces/disponibles',[CampagneController::class, 'facesDisponibles']
+            Route::get(
+                '/faces/disponibles',
+                [CampagneController::class, 'facesDisponibles']
+            );
+
+            Route::patch(
+                '/taches/{tache}/assigner',
+                [TacheController::class, 'assigner']
+            );
+
+            Route::get(
+                '/agents',
+                [TacheController::class, 'agents']
             );
         });
 
-        Route::middleware('role:super_admin')
-            ->get('/admin/test', function (Request $request) {
-                return response()->json([
-                    'message' => 'Acces autorise - Niveau Super Admin',
-                    'role'    => $request->user()->getRoleNames()->first(),
-                ]);
-            });
-
-        Route::middleware('role:super_admin|gestionnaire')
-            ->get('/gestionnaire/test', function (Request $request) {
-                return response()->json([
-                    'message' => 'Acces autorise - Niveau Gestionnaire',
-                    'role'    => $request->user()->getRoleNames()->first(),
-                ]);
-            });
-
-        Route::get('/agent/test', function (Request $request) {
-            return response()->json([
-                'message' => 'Acces autorise - Niveau Agent',
-                'role'    => $request->user()->getRoleNames()->first(),
-            ]);
-        });
+        // ── Tâches — tous les rôles authentifiés 
+        Route::get(
+            '/taches',
+            [TacheController::class, 'index']
+        );
+        Route::get(
+            '/taches/{tache}',
+            [TacheController::class, 'show']
+        );
+        Route::patch(
+            '/taches/{tache}/avancer',
+            [TacheController::class, 'avancer']
+        );
     });
 });

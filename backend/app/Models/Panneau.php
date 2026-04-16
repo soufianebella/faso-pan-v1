@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Enums\PanneauStatus;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -12,7 +13,7 @@ use Illuminate\Database\Eloquent\Builder;
 
 class Panneau extends Model
 {
-    use SoftDeletes;
+    use HasFactory, SoftDeletes;
     protected $table = 'panneaux';
     protected $fillable = [
         'reference',

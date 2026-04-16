@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -10,6 +11,8 @@ use Illuminate\Database\Eloquent\Builder;
 
 class Affectation extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'campagne_id', 'face_id',
         'date_debut', 'date_fin',
@@ -43,7 +46,6 @@ class Affectation extends Model
 
     /**
      * Le scope de chevauchement : anti double-booking
-
      */
     public function scopeChevauche(
         Builder $query,
