@@ -254,7 +254,7 @@ Session 14b : RBAC Tâches — TERMINÉE
     - Gestionnaire : peut assigner un agent.
 
 ## 15. Prochaine Étape
-
+Session 14c: Frontend Tâches
 Session 15 : Dashboard & Statistiques
 Session 16 : Filtres & Recherche
 Session 17 : UX + Validation

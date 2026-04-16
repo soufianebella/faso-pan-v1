@@ -47,6 +47,12 @@ const routes = [
         name: "campagnes",
         component: () => import("@/views/campagnes/CampagnesView.vue"),
       },
+
+      {
+        path: "taches",
+        name: "taches",
+        component: () => import("@/views/taches/TachesView.vue"),
+      },
     ],
   },
   {
