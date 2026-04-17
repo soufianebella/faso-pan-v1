@@ -211,7 +211,7 @@ Session 8 : Modélisation panneaux
 Session 9 : CRUD Panneaux backend
 Session 10 : Frontend Panneaux
 
-Semaine 4 — EN COURS
+Semaine 4 — TERMINÉE
 Session 11 : Modèle réservation
 Session 12 : Anti double-booking (5/5 tests Postman)
 Session 13 : Transactions DB
@@ -256,6 +256,23 @@ Session 14b : RBAC Tâches — TERMINÉE
 ## 15. Prochaine Étape
 Session 14c: Frontend Tâches
 Session 15 : Dashboard & Statistiques
+Semaine 5 — EN COURS
+  C Session 15 : Dashboard & Statistiques
+     - StatistiquesService (logique métier extraite)
+     - StatistiquesController (30 lignes propres)
+     - DashboardView.vue : KPI + barres + donut + feed
+     - StatistiquesView.vue : 4 graphiques ApexCharts
+     - Filtres période (ce_mois / trimestre)
+     - 5/5 tests Postman validés
+
+Fichiers ajoutés :
+  app/Services/StatistiquesService.php
+  app/Http/Controllers/Api/V1/StatistiquesController.php
+  src/api/dashboard.api.js
+  src/stores/dashboard.store.js
+  src/stores/statistiques.store.js
+  src/views/DashboardView.vue
+  src/views/statistiques/StatistiquesView.vue
 Session 16 : Filtres & Recherche
 Session 17 : UX + Validation
 Session 18 : Sécurité avancée
