@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\V1\CampagneController;
 use App\Http\Controllers\Api\V1\PanneauController;
 use App\Http\Controllers\Api\V1\TacheController;
 use App\Http\Controllers\Api\V1\UserController;
+use App\Http\Controllers\Api\V1\StatistiqueController;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 
@@ -29,9 +30,10 @@ Route::get('/test', function () {
 Route::prefix('v1')->group(function () {
 
     // ── Route publique 
+    
     Route::post('/login', [AuthController::class, 'login'])
-        ->middleware('throttle:5,1')
-        ->name('login');
+         ->middleware('throttle:5,1')
+         ->name('login');
 
     // ── Routes authentifiées 
     Route::middleware('auth:sanctum')->group(function () {
@@ -49,39 +51,36 @@ Route::prefix('v1')->group(function () {
         Route::middleware('role:super_admin|gestionnaire')->group(function () {
 
             Route::apiResource('panneaux', PanneauController::class)
-                ->parameters(['panneaux' => 'panneau']);
+                 ->parameters(['panneaux' => 'panneau']);
 
             Route::apiResource('campagnes', CampagneController::class)
-                ->parameters(['campagnes' => 'campagne']);
+                 ->parameters(['campagnes' => 'campagne']);
 
-            Route::get(
-                '/faces/disponibles',
-                [CampagneController::class, 'facesDisponibles']
-            );
+            Route::get('/faces/disponibles',
+                [CampagneController::class, 'facesDisponibles']);
 
-            Route::patch(
-                '/taches/{tache}/assigner',
-                [TacheController::class, 'assigner']
-            );
+            Route::patch('/taches/{tache}/assigner',
+                [TacheController::class, 'assigner']);
 
-            Route::get(
-                '/agents',
-                [TacheController::class, 'agents']
-            );
+            Route::get('/agents',
+                [TacheController::class, 'agents']);
         });
 
         // ── Tâches — tous les rôles authentifiés 
-        Route::get(
-            '/taches',
-            [TacheController::class, 'index']
-        );
-        Route::get(
-            '/taches/{tache}',
-            [TacheController::class, 'show']
-        );
-        Route::patch(
-            '/taches/{tache}/avancer',
-            [TacheController::class, 'avancer']
-        );
+        Route::get('/taches',
+            [TacheController::class, 'index']);
+        Route::get('/taches/{tache}',
+            [TacheController::class, 'show']);
+        Route::patch('/taches/{tache}/avancer',
+            [TacheController::class, 'avancer']);
+
+        // ── Statistiques 
+        Route::get('/stats',
+            [StatistiqueController::class, 'index']);
+        Route::get('/stats/dashboard',
+            [StatistiqueController::class, 'dashboard']);
+        Route::get('/stats/statistiques',
+            [StatistiqueController::class, 'statistiques']);
+
     });
 });

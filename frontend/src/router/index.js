@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from "vue-router";
 import { useAuthStore } from "@/stores/auth.store";
+import { useDashboardStore } from "@/stores/dashboard.store";
 
 const routes = [
   {
@@ -52,6 +53,18 @@ const routes = [
         path: "taches",
         name: "taches",
         component: () => import("@/views/taches/TachesView.vue"),
+      },
+
+      {
+        path: "",
+        name: "dashboard",
+        component: () => import("@/views/dashboard/DashboardView.vue"),
+      },
+
+      {
+        path: "statistiques",
+        name: "statistiques",
+        component: () => import("@/views/statistiques/StatistiquesView.vue"),
       },
     ],
   },

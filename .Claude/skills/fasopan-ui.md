@@ -87,4 +87,4 @@ Store pattern :
   - storeToRefs() obligatoire pour la réactivité
   - errors = ref(null) stocke les erreurs 422 Laravel
   - isLoading séparé par opération si nécessaire
-  - throw err dans catch pour que le composant gère l'affichage
+  - throw err dans catch pour que le composant gère l'affichage    
