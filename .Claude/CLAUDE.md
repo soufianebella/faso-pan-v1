@@ -253,26 +253,55 @@ Session 14b : RBAC Tâches — TERMINÉE
     - Agent : peut avancer le statut de sa tâche.
     - Gestionnaire : peut assigner un agent.
 
-## 15. Prochaine Étape
-Session 14c: Frontend Tâches
-Session 15 : Dashboard & Statistiques
-Semaine 5 — EN COURS
-  Session 15 : Dashboard & Statistiques
-     - StatistiquesService (logique métier extraite)
-     - StatistiquesController (30 lignes propres)
-     - DashboardView.vue : KPI + barres + donut + feed
-     - StatistiquesView.vue : 4 graphiques ApexCharts
-     - Filtres période (ce_mois / trimestre)
-     - 5/5 tests Postman validés
+## 15. Session 14c — Frontend Tâches — TERMINÉE
 
-Fichiers ajoutés :
-  app/Services/StatistiquesService.php
-  app/Http/Controllers/Api/V1/StatistiquesController.php
-  src/api/dashboard.api.js
-  src/stores/dashboard.store.js
-  src/stores/statistiques.store.js
-  src/views/DashboardView.vue
-  src/views/statistiques/StatistiquesView.vue
+### Fonctionnalités livrées
+- Vue Kanban 4 colonnes (en_attente / en_cours / realisee / validee)
+- Bascule Tableau ↔ Liste (TacheTable.vue avec badges d'action)
+- Création de tâche : TacheCreationModal.vue (affectation + agent + note)
+- Assignation agent : TacheModal.vue (gestionnaire)
+- Avancement statut : boutons contextuels par rôle
+- Upload photo preuve : TacheRealiserModal.vue (en_cours → realisee)
+- Remplacement photo sur carte realisee : clic/hover direct sur miniature
+- Filtrage sidebar par rôle (agent ne voit pas Statistiques)
+
+### Fichiers ajoutés / modifiés
+Backend :
+  app/Http/Requests/AvancerTacheRequest.php  (nouveau)
+  app/Http/Requests/UpdateTachePhotoRequest.php (nouveau)
+  app/Http/Controllers/Api/V1/TacheController.php (store, avancer, updatePhoto)
+  app/Services/TacheService.php (avancerStatut avec photo, updatePhoto)
+  app/Http/Resources/TacheResource.php (photo_url, latitude_pose, longitude_pose)
+  app/Policies/TachePolicy.php (updatePhoto method)
+  routes/api.php (POST /taches/{tache}/photo, match patch|post avancer)
+
+Frontend :
+  src/api/taches.api.js (avancer FormData, updatePhoto)
+  src/stores/taches.store.js (avancerTache payload, updatePhoto, creerTache)
+  src/views/taches/TachesView.vue (Kanban, modals, photo upload inline)
+  src/components/taches/TacheTable.vue (badges action)
+  src/components/taches/TacheCreationModal.vue (nouveau)
+  src/components/taches/TacheRealiserModal.vue (nouveau — upload + GPS)
+  src/layouts/AppLayout.vue (navItems filtrés par rôle)
+
+### Règles techniques validées
+- FormData multipart : Content-Type: undefined (pas 'multipart/form-data')
+  → le navigateur génère le boundary automatiquement
+- ref Vue 3 dans v-for → Proxy, pas HTMLElement
+  → utiliser document.getElementById() pour les inputs natifs
+- Policy::update() trop restrictive pour updatePhoto (statut realisee exclu)
+  → méthode dédiée updatePhoto() dans TachePolicy
+- Route POST /avancer : Route::match(['patch','post'], ...) car navigateur
+  n'envoie pas PATCH en multipart
+
+### Prochaine Étape
+Session 15 : Dashboard & Statistiques
+Session 16 : Filtres & Recherche
+Session 17 : UX + Validation
+Session 18 : Sécurité avancée
+Session 19 : Refactor
+Session 20 : Tests finaux
+Session 21 : Préparation démo
 Session 16 : Filtres & Recherche
 Session 17 : UX + Validation
 Session 18 : Sécurité avancée

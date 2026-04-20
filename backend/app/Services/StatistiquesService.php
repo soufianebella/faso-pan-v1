@@ -12,7 +12,7 @@ use App\Models\Tache;
 
 class StatistiquesService
 {
-    // ── Dashboard 
+    // ── Dashboard ─────────────────────────────────────────────────────────────
 
     public function dashboard(): array
     {
@@ -20,36 +20,36 @@ class StatistiquesService
         $dans7jours  = now()->addDays(7)->toDateString();
 
         return [
-            'kpi'              => $this->kpiDashboard($aujourd_hui, $dans7jours),
+            'kpi'                  => $this->kpiDashboard($aujourd_hui, $dans7jours),
             'occupation_mensuelle' => $this->occupationMensuelle(),
-            'expirent_bientot' => $this->expirentBientot($aujourd_hui, $dans7jours),
-            'par_ville'        => $this->repartitionParVille(),
-            'campagnes_actives'=> $this->campagnesActives(),
-            'dernieres_taches' => $this->dernieresTaches(),
+            'expirent_bientot'     => $this->expirentBientot($aujourd_hui, $dans7jours),
+            'par_ville'            => $this->repartitionParVille(),
+            'campagnes_actives'    => $this->campagnesActives(),
+            'dernieres_taches'     => $this->dernieresTaches(),
         ];
     }
 
-    // ── Statistiques ───────────────────────────────────────────────
+    // ── Statistiques ──────────────────────────────────────────────────────────
 
     public function statistiques(string $periode = 'ce_mois'): array
     {
         [$debut, $fin] = $this->resoudrePeriode($periode);
 
         return [
-            'kpi'               => $this->kpiStatistiques($debut, $fin),
-            'evolution'         => $this->evolutionParVille(),
-            'top_annonceurs'    => $this->topAnnonceurs(),
-            'statut_faces'      => $this->statutFaces(),
-            'repartition_taches'=> $this->repartitionTaches(),
-            'tableau_villes'    => $this->tableauParVille($debut, $fin),
+            'kpi'                => $this->kpiStatistiques($debut, $fin),
+            'evolution'          => $this->evolutionParVille(),
+            'top_annonceurs'     => $this->topAnnonceurs(),
+            'statut_faces'       => $this->statutFaces(),
+            'repartition_taches' => $this->repartitionTaches(),
+            'tableau_villes'     => $this->tableauParVille($debut, $fin),
         ];
     }
 
-    // ── Méthodes privées 
+    // ── Privées ───────────────────────────────────────────────────────────────
 
     private function resoudrePeriode(string $periode): array
     {
-        return match($periode) {
+        return match ($periode) {
             'trimestre' => [
                 now()->startOfQuarter()->toDateString(),
                 now()->endOfQuarter()->toDateString(),
@@ -63,28 +63,34 @@ class StatistiquesService
 
     private function kpiDashboard(string $debut, string $fin): array
     {
+        // 1 requête pour libre + occupee au lieu de 2 COUNT séparés
+        $statutFaces = Face::selectRaw('statut, COUNT(*) as total')
+            ->groupBy('statut')
+            ->pluck('total', 'statut');
+
         return [
             'total_panneaux' => Panneau::count(),
-            'faces_libres'   => Face::where('statut', 'libre')->count(),
-            'faces_occupees' => Face::where('statut', 'occupee')->count(),
-            'expirent_7j'    => Affectation::whereBetween(
-                'date_fin', [$debut, $fin]
-            )->count(),
+            'faces_libres'   => $statutFaces->get('libre', 0),
+            'faces_occupees' => $statutFaces->get('occupee', 0),
+            'expirent_7j'    => Affectation::whereBetween('date_fin', [$debut, $fin])->count(),
         ];
     }
 
     private function kpiStatistiques(string $debut, string $fin): array
     {
-        $totalFaces    = Face::count();
-        $facesOccupees = Face::where('statut', 'occupee')->count();
+        // 1 requête pour tous les statuts de faces
+        $statutFaces   = Face::selectRaw('statut, COUNT(*) as total')
+            ->groupBy('statut')
+            ->pluck('total', 'statut');
+
+        $totalFaces    = $statutFaces->sum();
+        $facesOccupees = $statutFaces->get('occupee', 0);
 
         return [
             'taux_occupation'   => $totalFaces > 0
                 ? round($facesOccupees / $totalFaces * 100, 1)
                 : 0,
-            'campagnes_actives' => Campagne::whereIn('statut',
-                ['preparation', 'active']
-            )->count(),
+            'campagnes_actives' => Campagne::whereIn('statut', ['preparation', 'active'])->count(),
             'taches_attente'    => Tache::where('statut', 'en_attente')->count(),
             'revenu_estime'     => $this->calculerRevenu($debut, $fin),
         ];
@@ -92,7 +98,8 @@ class StatistiquesService
 
     private function calculerRevenu(string $debut, string $fin): int
     {
-        $prixMoyenFace = 150000;
+        // Prix moyen par face — valeur métier Burkina Faso
+        $prixMoyenFace = 150_000;
 
         return Affectation::where('date_debut', '<=', $fin)
             ->where('date_fin', '>=', $debut)
@@ -101,24 +108,36 @@ class StatistiquesService
 
     private function occupationMensuelle(): array
     {
+        $totalFaces = Face::count(); // constant — hors boucle
+
+        $debut12 = now()->subMonths(11)->startOfMonth()->toDateString();
+        $fin12   = now()->endOfMonth()->toDateString();
+
+        // 1 seule requête pour toute la fenêtre de 12 mois
+        $affectations = Affectation::select(['face_id', 'date_debut', 'date_fin'])
+            ->where('date_debut', '<=', $fin12)
+            ->where('date_fin',   '>=', $debut12)
+            ->get();
+
         $mois = [];
         for ($i = 11; $i >= 0; $i--) {
             $debut = now()->subMonths($i)->startOfMonth()->toDateString();
             $fin   = now()->subMonths($i)->endOfMonth()->toDateString();
 
-            $total    = Face::count();
-            $occupees = Affectation::where('date_debut', '<=', $fin)
-                ->where('date_fin', '>=', $debut)
-                ->distinct('face_id')
-                ->count('face_id');
+            $occupees = $affectations
+                ->filter(fn ($a) => $a->date_debut <= $fin && $a->date_fin >= $debut)
+                ->pluck('face_id')
+                ->unique()
+                ->count();
 
             $mois[] = [
                 'mois' => now()->subMonths($i)->translatedFormat('M'),
-                'taux' => $total > 0
-                    ? round($occupees / $total * 100, 1)
+                'taux' => $totalFaces > 0
+                    ? round($occupees / $totalFaces * 100, 1)
                     : 0,
             ];
         }
+
         return $mois;
     }
 
@@ -133,8 +152,8 @@ class StatistiquesService
         ->limit(5)
         ->get()
         ->map(fn ($a) => [
-            'campagne' => $a->campagne->nom,
-            'panneau'  => $a->face->panneau->reference,
+            'campagne' => $a->campagne?->nom ?? 'N/A',
+            'panneau'  => $a->face?->panneau?->reference ?? 'N/A',
             'jours'    => now()->diffInDays($a->date_fin),
         ])
         ->toArray();
@@ -152,28 +171,26 @@ class StatistiquesService
 
     private function campagnesActives(): array
     {
-        return Campagne::with(['affectations.tache'])
-            ->whereIn('statut', ['preparation', 'active'])
-            ->latest()
-            ->limit(5)
-            ->get()
-            ->map(fn ($c) => [
-                'id'         => $c->id,
-                'nom'        => $c->nom,
-                'annonceur'  => $c->annonceur,
-                'avancement' => $this->calculerAvancement($c),
-            ])
-            ->toArray();
-    }
-
-    private function calculerAvancement(Campagne $campagne): int
-    {
-        $taches   = $campagne->affectations->pluck('tache')->filter();
-        if ($taches->isEmpty()) return 0;
-        return (int) round(
-            $taches->where('statut', 'validee')->count()
-            / $taches->count() * 100
-        );
+        // withCount évite de charger toutes les affectations + tâches en mémoire
+        return Campagne::withCount([
+            'affectations as total_taches'   => fn ($q) => $q->whereHas('tache'),
+            'affectations as taches_valides' => fn ($q) => $q->whereHas(
+                'tache', fn ($t) => $t->where('statut', 'validee')
+            ),
+        ])
+        ->whereIn('statut', ['preparation', 'active'])
+        ->latest()
+        ->limit(5)
+        ->get()
+        ->map(fn ($c) => [
+            'id'         => $c->id,
+            'nom'        => $c->nom,
+            'annonceur'  => $c->annonceur,
+            'avancement' => $c->total_taches > 0
+                ? (int) round($c->taches_valides / $c->total_taches * 100)
+                : 0,
+        ])
+        ->toArray();
     }
 
     private function dernieresTaches(): array
@@ -183,13 +200,14 @@ class StatistiquesService
             'affectation.face.panneau:id,reference',
         ])
         ->whereNotNull('agent_id')
+        ->whereHas('affectation.face.panneau') // garde uniquement les tâches avec relations intactes
         ->latest()
         ->limit(5)
         ->get()
         ->map(fn ($t) => [
             'agent'   => $t->agent->name,
-            'panneau' => $t->affectation->face->panneau->reference,
-            'face'    => $t->affectation->face->numero,
+            'panneau' => $t->affectation?->face?->panneau?->reference ?? 'N/A',
+            'face'    => $t->affectation?->face?->numero ?? '?',
             'statut'  => $t->statut,
             'date'    => $t->updated_at->diffForHumans(),
         ])
@@ -199,36 +217,52 @@ class StatistiquesService
     private function evolutionParVille(): array
     {
         $villes = Panneau::distinct()->pluck('ville')->take(3);
-        $series = [];
 
-        foreach ($villes as $ville) {
-            $data = [];
-            for ($i = 11; $i >= 0; $i--) {
-                $debut = now()->subMonths($i)->startOfMonth()->toDateString();
-                $fin   = now()->subMonths($i)->endOfMonth()->toDateString();
+        $debut12 = now()->subMonths(11)->startOfMonth()->toDateString();
+        $fin12   = now()->endOfMonth()->toDateString();
 
-                $total = Face::whereHas('panneau',
-                    fn ($q) => $q->where('ville', $ville)
-                )->count();
+        // 1 requête : faces indexées par ville
+        $facesParVille = Face::select(['id', 'panneau_id'])
+            ->with('panneau:id,ville')
+            ->get()
+            ->groupBy('panneau.ville')
+            ->map(fn ($faces) => $faces->pluck('id'));
 
-                $occupees = Affectation::whereHas('face.panneau',
-                    fn ($q) => $q->where('ville', $ville)
-                )
-                ->where('date_debut', '<=', $fin)
-                ->where('date_fin',   '>=', $debut)
-                ->distinct('face_id')
-                ->count('face_id');
-
-                $data[] = $total > 0
-                    ? round($occupees / $total * 100, 1)
-                    : 0;
-            }
-            $series[] = ['name' => $ville, 'data' => $data];
-        }
+        // 1 requête : toutes les affectations sur 12 mois
+        $affectations = Affectation::select(['face_id', 'date_debut', 'date_fin'])
+            ->where('date_debut', '<=', $fin12)
+            ->where('date_fin',   '>=', $debut12)
+            ->get();
 
         $categories = [];
         for ($i = 11; $i >= 0; $i--) {
             $categories[] = now()->subMonths($i)->translatedFormat('M');
+        }
+
+        $series = [];
+        foreach ($villes as $ville) {
+            $faceIds = $facesParVille->get($ville, collect());
+            $total   = $faceIds->count();
+            $data    = [];
+
+            for ($i = 11; $i >= 0; $i--) {
+                $debut = now()->subMonths($i)->startOfMonth()->toDateString();
+                $fin   = now()->subMonths($i)->endOfMonth()->toDateString();
+
+                $occupees = $affectations
+                    ->filter(fn ($a) =>
+                        $faceIds->contains($a->face_id)
+                        && $a->date_debut <= $fin
+                        && $a->date_fin   >= $debut
+                    )
+                    ->pluck('face_id')
+                    ->unique()
+                    ->count();
+
+                $data[] = $total > 0 ? round($occupees / $total * 100, 1) : 0;
+            }
+
+            $series[] = ['name' => $ville, 'data' => $data];
         }
 
         return ['series' => $series, 'categories' => $categories];
@@ -246,40 +280,58 @@ class StatistiquesService
 
     private function statutFaces(): array
     {
+        // 1 requête GROUP BY au lieu de 2 COUNT séparés
+        $counts = Face::selectRaw('statut, COUNT(*) as total')
+            ->groupBy('statut')
+            ->pluck('total', 'statut');
+
         return [
-            ['statut' => 'Libre',   'total' => Face::where('statut', 'libre')->count()],
-            ['statut' => 'Occupee', 'total' => Face::where('statut', 'occupee')->count()],
+            ['statut' => 'Libre',   'total' => $counts->get('libre', 0)],
+            ['statut' => 'Occupee', 'total' => $counts->get('occupee', 0)],
         ];
     }
 
     private function repartitionTaches(): array
     {
+        // 1 requête GROUP BY au lieu de 4 COUNT séparés
+        $counts = Tache::selectRaw('statut, COUNT(*) as total')
+            ->groupBy('statut')
+            ->pluck('total', 'statut');
+
         return [
-            ['statut' => 'En attente', 'total' => Tache::where('statut', 'en_attente')->count()],
-            ['statut' => 'En cours',   'total' => Tache::where('statut', 'en_cours')->count()],
-            ['statut' => 'Realisee',   'total' => Tache::where('statut', 'realisee')->count()],
-            ['statut' => 'Validee',    'total' => Tache::where('statut', 'validee')->count()],
+            ['statut' => 'En attente', 'total' => $counts->get('en_attente', 0)],
+            ['statut' => 'En cours',   'total' => $counts->get('en_cours', 0)],
+            ['statut' => 'Realisee',   'total' => $counts->get('realisee', 0)],
+            ['statut' => 'Validee',    'total' => $counts->get('validee', 0)],
         ];
     }
 
     private function tableauParVille(string $debut, string $fin): array
     {
+        // Requête 1 : nombre de faces par ville
+        $facesParVille = Face::selectRaw('panneaux.ville, COUNT(faces.id) as total')
+            ->join('panneaux', 'panneaux.id', '=', 'faces.panneau_id')
+            ->groupBy('panneaux.ville')
+            ->pluck('total', 'ville');
+
+        // Requête 2 : faces occupées par ville sur la période
+        $occupeesParVille = Affectation::selectRaw(
+            'panneaux.ville, COUNT(DISTINCT affectations.face_id) as occupees'
+        )
+        ->join('faces',    'faces.id',    '=', 'affectations.face_id')
+        ->join('panneaux', 'panneaux.id', '=', 'faces.panneau_id')
+        ->where('affectations.date_debut', '<=', $fin)
+        ->where('affectations.date_fin',   '>=', $debut)
+        ->groupBy('panneaux.ville')
+        ->pluck('occupees', 'ville');
+
         return Panneau::selectRaw('ville, COUNT(*) as total_panneaux')
             ->groupBy('ville')
             ->orderByDesc('total_panneaux')
             ->get()
-            ->map(function ($row) use ($debut, $fin) {
-                $faces = Face::whereHas('panneau',
-                    fn ($q) => $q->where('ville', $row->ville)
-                )->count();
-
-                $occupees = Affectation::whereHas('face.panneau',
-                    fn ($q) => $q->where('ville', $row->ville)
-                )
-                ->where('date_debut', '<=', $fin)
-                ->where('date_fin',   '>=', $debut)
-                ->distinct('face_id')
-                ->count('face_id');
+            ->map(function ($row) use ($facesParVille, $occupeesParVille) {
+                $faces    = $facesParVille->get($row->ville, 0);
+                $occupees = $occupeesParVille->get($row->ville, 0);
 
                 return [
                     'nom'            => $row->ville,
@@ -287,7 +339,7 @@ class StatistiquesService
                     'taux'           => $faces > 0
                         ? round($occupees / $faces * 100, 1)
                         : 0,
-                    'ca'             => $occupees * 150000,
+                    'ca'             => $occupees * 150_000,
                 ];
             })
             ->toArray();

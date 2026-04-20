@@ -16,15 +16,6 @@ class StatistiqueController extends Controller
         protected readonly StatistiquesService $statistiquesService
     ) {}
 
-    public function index(): JsonResponse
-    {
-        $this->authorize('viewAny', Panneau::class);
-
-        return response()->json([
-            'data' => $this->statistiquesService->dashboard(),
-        ]);
-    }
-
     public function dashboard(): JsonResponse
     {
         $this->authorize('viewAny', Panneau::class);
@@ -38,10 +29,14 @@ class StatistiqueController extends Controller
     {
         $this->authorize('viewAny', Panneau::class);
 
-        $periode = $request->input('periode', 'ce_mois');
+        $request->validate([
+            'periode' => ['sometimes', 'string', 'in:ce_mois,trimestre'],
+        ]);
 
         return response()->json([
-            'data' => $this->statistiquesService->statistiques($periode),
+            'data' => $this->statistiquesService->statistiques(
+                $request->input('periode', 'ce_mois')
+            ),
         ]);
     }
 }

@@ -87,19 +87,9 @@ Route::prefix('v1')->group(function () {
         // Remplacement photo sans changement de statut
         Route::post('/taches/{tache}/photo', [TacheController::class, 'updatePhoto']);
 
-        // ── Statistiques 
-        Route::get(
-            '/stats',
-            [StatistiqueController::class, 'index']
-        );
-        Route::get(
-            '/stats/dashboard',
-            [StatistiqueController::class, 'dashboard']
-        );
-        Route::get(
-            '/stats/statistiques',
-            [StatistiqueController::class, 'statistiques']
-        );
+        // ── Statistiques
+        Route::get('/stats/dashboard',     [StatistiqueController::class, 'dashboard']);
+        Route::get('/stats/statistiques',  [StatistiqueController::class, 'statistiques']);
 
 
 
