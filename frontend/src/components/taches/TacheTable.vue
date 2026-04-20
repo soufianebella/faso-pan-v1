@@ -35,11 +35,7 @@
         </td>
       </tr>
 
-      <tr
-        v-for="tache in taches"
-        :key="tache.id"
-        class="bg-white transition-colors hover:bg-slate-50"
-      >
+      <tr v-for="tache in taches" :key="tache.id" class="bg-white transition-colors hover:bg-slate-50">
         <!-- Campagne -->
         <td class="px-6 py-4">
           <div class="font-semibold" style="color: #1C2833">
@@ -70,57 +66,67 @@
 
         <!-- Agent -->
         <td class="px-6 py-4">
-          <span
-            v-if="tache.agent"
-            class="text-sm font-medium"
-            style="color: #374151"
-          >
+          <span v-if="tache.agent" class="text-sm font-medium" style="color: #374151">
             {{ tache.agent.name }}
           </span>
-          <span
-            v-else
-            class="text-xs px-2 py-1 rounded"
-            style="background-color: #FEF3DC; color: #F97316"
-          >
+          <span v-else class="text-xs px-2 py-1 rounded" style="background-color: #FEF3DC; color: #F97316">
             Non assigne
           </span>
         </td>
 
         <!-- Statut -->
         <td class="px-6 py-4 text-center">
-          <span
-            class="px-2.5 py-1 rounded-full text-xs font-bold uppercase"
-            :style="getStatutStyle(tache.statut)"
-          >
+          <span class="px-2.5 py-1 rounded-full text-xs font-bold uppercase" :style="getStatutStyle(tache.statut)">
             {{ formatStatut(tache.statut) }}
           </span>
         </td>
 
         <!-- Actions -->
-        <td class="px-6 py-4 text-right space-x-2">
+        <td class="px-6 py-4">
+          <div class="flex items-center justify-end gap-2">
 
-          <!-- Bouton Assigner — gestionnaire seulement -->
-          <button
-            v-if="isGestionnaire"
-            @click="$emit('assigner', tache)"
-            class="p-1.5 transition-colors text-xs font-medium"
-            style="color: #1B3B8A"
-            title="Assigner un agent"
-          >
-            <i class="fa-solid fa-user-plus"></i>
-          </button>
+            <!-- Assigner — gestionnaire, tache sans agent ou en attente -->
+            <button
+              v-if="isGestionnaire && ['en_attente'].includes(tache.statut)"
+              @click="$emit('assigner', tache)"
+              class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors"
+              style="background-color: #EBF3FC; color: #1B3B8A"
+              title="Assigner un agent"
+            >
+              <i class="fa-solid fa-user-plus text-[10px]"></i> Assigner
+            </button>
 
-          <!-- Bouton Avancer — agent sur sa propre tache -->
-          <button
-            v-if="peutAvancer(tache)"
-            @click="$emit('avancer', tache.id)"
-            class="p-1.5 transition-colors text-xs font-medium"
-            style="color: #F97316"
-            title="Avancer le statut"
-          >
-            <i class="fa-solid fa-circle-arrow-right"></i>
-          </button>
+            <!-- Commencer — agent sur sa tache en_attente -->
+            <button
+              v-if="peutAvancer(tache) && tache.statut === 'en_attente'"
+              @click="$emit('avancer', tache.id)"
+              class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors"
+              style="background-color: #FEF3DC; color: #F97316"
+            >
+              <i class="fa-solid fa-play text-[10px]"></i> Commencer
+            </button>
 
+            <!-- Marquer réalisée — agent sur sa tache en_cours -->
+            <button
+              v-if="peutAvancer(tache) && tache.statut === 'en_cours'"
+              @click="$emit('avancer', tache.id)"
+              class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors"
+              style="background-color: #F3E8FF; color: #7C3AED"
+            >
+              <i class="fa-solid fa-check text-[10px]"></i> Realisee
+            </button>
+
+            <!-- Valider — gestionnaire sur tache realisee -->
+            <button
+              v-if="peutValider(tache)"
+              @click="$emit('valider', tache.id)"
+              class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors"
+              style="background-color: #D1FAE5; color: #065F46"
+            >
+              <i class="fa-solid fa-circle-check text-[10px]"></i> Valider
+            </button>
+
+          </div>
         </td>
       </tr>
 
@@ -132,11 +138,11 @@
 import { computed } from 'vue'
 import { useAuthStore } from '@/stores/auth.store'
 
-defineProps({
+const props = defineProps({
   taches: { type: Array, required: true, default: () => [] },
 })
 
-defineEmits(['assigner', 'avancer'])
+defineEmits(['assigner', 'avancer', 'valider'])
 
 const auth = useAuthStore()
 
@@ -144,24 +150,29 @@ const isGestionnaire = computed(() =>
   ['super_admin', 'gestionnaire'].includes(auth.user?.role)
 )
 
+// Agent : peut avancer sa propre tâche (en_attente → en_cours → realisee)
 function peutAvancer(tache) {
-  const isOwnTache    = tache.agent?.id === auth.user?.id
-  const isProcessable = ['en_attente', 'en_cours'].includes(tache.statut)
-  return isOwnTache && isProcessable
+  return tache.agent?.id === auth.user?.id
+    && ['en_attente', 'en_cours'].includes(tache.statut)
+}
+
+// Gestionnaire : peut valider une tâche réalisée
+function peutValider(tache) {
+  return isGestionnaire.value && tache.statut === 'realisee'
 }
 
 const STATUT_STYLES = {
   en_attente: { backgroundColor: '#EBF3FC', color: '#1B3B8A' },
-  en_cours:   { backgroundColor: '#FEF3DC', color: '#F97316' },
-  realisee:   { backgroundColor: '#F3E8FF', color: '#7C3AED' },
-  validee:    { backgroundColor: '#D1FAE5', color: '#065F46' },
+  en_cours: { backgroundColor: '#FEF3DC', color: '#F97316' },
+  realisee: { backgroundColor: '#F3E8FF', color: '#7C3AED' },
+  validee: { backgroundColor: '#D1FAE5', color: '#065F46' },
 }
 
 const STATUT_LABELS = {
   en_attente: 'En attente',
-  en_cours:   'En cours',
-  realisee:   'Realisee',
-  validee:    'Validee',
+  en_cours: 'En cours',
+  realisee: 'Realisee',
+  validee: 'Validee',
 }
 
 function getStatutStyle(statut) {

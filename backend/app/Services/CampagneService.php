@@ -6,47 +6,69 @@ namespace App\Services;
 
 use App\Models\Campagne;
 use App\Models\Face;
+use App\Models\User;
+use App\Services\NotificationService;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 
 class CampagneService
 {
     public function __construct(
-        protected readonly DisponibiliteService $disponibilite
+        protected readonly DisponibiliteService  $disponibilite,
+        protected readonly NotificationService   $notificationService,
     ) {}
 
     public function create(array $data, int $createdBy): Campagne
     {
         return DB::transaction(function () use ($data, $createdBy) {
 
-            // Étape 2 : créer la campagne
+            // Étape 1 : créer la campagne
             $campagne = Campagne::create([
                 ...Arr::except($data, ['face_ids']),
                 'created_by' => $createdBy,
                 'statut'     => 'preparation',
             ]);
 
-            // Étape 3+4+5 : boucler sur les faces
+            // Étape 2 : boucler sur les faces
             foreach ($data['face_ids'] as $faceId) {
 
-                // Créer l'affectation (le pivot contractuel)
+                // Créer l'affectation
                 $affectation = $campagne->affectations()->create([
                     'face_id'    => $faceId,
                     'date_debut' => $data['date_debut'],
                     'date_fin'   => $data['date_fin'],
                 ]);
 
-                // Mettre à jour le statut de la face → occupee
+                // Marquer la face comme occupée
                 Face::where('id', $faceId)
                     ->update(['statut' => 'occupee']);
 
-                // Générer la tâche terrain automatiquement
+                // Générer la tâche terrain
                 $affectation->tache()->create([
                     'statut' => 'en_attente',
                 ]);
             }
 
-            // Étape 6 : retourner la campagne avec ses relations
+            // Étape 3 : notifier les agents assignés
+            // Recharge les affectations avec leurs tâches
+            $campagne->load('affectations.tache');
+
+            foreach ($campagne->affectations as $affectation) {
+                if ($affectation->tache?->agent_id) {
+                    $agent = User::find($affectation->tache->agent_id);
+                    if ($agent) {
+                        $this->notificationService->creerPourUser(
+                            user:    $agent,
+                            type:    'nouvelle_tache',
+                            titre:   'Nouvelle tache assignee',
+                            message: "Campagne {$campagne->nom} — panneau a installer.",
+                            lien:    '/taches',
+                        );
+                    }
+                }
+            }
+
+            // Étape 4 : retourner la campagne complète
             return $campagne->load([
                 'affectations.face.panneau',
                 'affectations.tache',
@@ -67,7 +89,6 @@ class CampagneService
         DB::transaction(function () use ($campagne) {
             $campagne->update(['statut' => 'expiree']);
 
-            // Libérer toutes les faces de cette campagne
             $faceIds = $campagne->affectations()->pluck('face_id');
             Face::whereIn('id', $faceIds)
                 ->update(['statut' => 'libre']);

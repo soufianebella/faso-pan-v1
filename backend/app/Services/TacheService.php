@@ -4,18 +4,28 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Models\Affectation;
 use App\Models\Tache;
 use App\Models\User;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class TacheService
 {
     /**
      * Avance le statut d'une tâche selon les règles métier.
-     * Agent    : en_attente → en_cours → realisee
-     * Gestionnaire : realisee → validee
+     * Agent        : en_attente → en_cours → realisee (photo obligatoire)
+     * Gestionnaire : realisee    → validee
+     *
+     * @param array{
+     *     photo?: UploadedFile|null,
+     *     note?: string|null,
+     *     latitude_pose?: float|null,
+     *     longitude_pose?: float|null,
+     * } $data
      */
-    public function avancerStatut(Tache $tache, User $user): Tache
+    public function avancerStatut(Tache $tache, User $user, array $data = []): Tache
     {
         $transitions = [
             'en_attente' => 'en_cours',
@@ -29,26 +39,50 @@ class TacheService
             throw new \RuntimeException('Cette tache est deja terminee.');
         }
 
-        // Vérification métier : seul gestionnaire peut valider
         if ($nouveauStatut === 'validee' && ! $user->can('taches.manage')) {
             throw new \RuntimeException(
                 'Seul un gestionnaire peut valider une tache.'
             );
         }
 
-        DB::transaction(function () use ($tache, $nouveauStatut, $user) {
-            $data = ['statut' => $nouveauStatut];
+        DB::transaction(function () use ($tache, $nouveauStatut, $user, $data) {
+            $updates = ['statut' => $nouveauStatut];
 
             if ($nouveauStatut === 'realisee') {
-                $data['realise_at'] = now();
+                $updates['realise_at'] = now();
+
+                // Photo de preuve — obligatoire via FormRequest
+                if (! empty($data['photo']) && $data['photo'] instanceof UploadedFile) {
+                    // Supprime l'ancienne photo si elle existe (ré-upload)
+                    if ($tache->photo_path) {
+                        Storage::disk('public')->delete($tache->photo_path);
+                    }
+
+                    $updates['photo_path'] = $data['photo']->store(
+                        'taches/' . $tache->id,
+                        'public'
+                    );
+                }
+
+                if (! empty($data['note'])) {
+                    $updates['note'] = $data['note'];
+                }
+
+                if (isset($data['latitude_pose'])) {
+                    $updates['latitude_pose'] = $data['latitude_pose'];
+                }
+
+                if (isset($data['longitude_pose'])) {
+                    $updates['longitude_pose'] = $data['longitude_pose'];
+                }
             }
 
             if ($nouveauStatut === 'validee') {
-                $data['valide_at'] = now();
-                $data['valide_by'] = $user->id;
+                $updates['valide_at'] = now();
+                $updates['valide_by'] = $user->id;
             }
 
-            $tache->update($data);
+            $tache->update($updates);
         });
 
         return $tache->fresh(['agent', 'validePar', 'affectation.face.panneau']);
@@ -58,6 +92,44 @@ class TacheService
     {
         $tache->update(['agent_id' => $agentId]);
         return $tache->fresh('agent');
+    }
+
+    /**
+     * Crée une tâche pour une affectation.
+     * Statut initial : en_attente.
+     */
+    public function creer(array $data): Tache
+    {
+        $tache = DB::transaction(function () use ($data): Tache {
+            return Tache::create([
+                'affectation_id' => $data['affectation_id'],
+                'agent_id'       => $data['agent_id'] ?? null,
+                'statut'         => 'en_attente',
+                'note'           => $data['note'] ?? null,
+            ]);
+        });
+
+        return $tache->load([
+            'agent:id,name',
+            'affectation.face.panneau:id,reference,ville',
+            'affectation.campagne:id,nom,annonceur',
+        ]);
+    }
+
+    /**
+     * Affectations sans tache — utilisées dans le formulaire de création.
+     */
+    public function affectationsDisponibles(): \Illuminate\Database\Eloquent\Collection
+    {
+        return Affectation::with([
+            'campagne:id,nom,annonceur,statut',
+            'face:id,panneau_id,numero',
+            'face.panneau:id,reference,ville',
+        ])
+        ->whereDoesntHave('tache')
+        ->whereHas('campagne', fn ($q) => $q->whereIn('statut', ['preparation', 'active']))
+        ->orderBy('date_fin')
+        ->get();
     }
 
     /**
@@ -71,20 +143,14 @@ class TacheService
             'affectation.campagne:id,nom,annonceur',
         ]);
 
-        // 1. Super Admin et Gestionnaire voient tout (basé sur la permission manage)
         if ($user->can('taches.manage')) {
             // Pas de restriction supplémentaire
-        } 
-        // 2. Agent voit seulement ses propres tâches
-        elseif ($user->can('taches.own.validate')) {
-            $query->where('agent_id', $user->id);
-        } 
-        // 3. Sécurité : si aucun des deux, on ne retourne rien (ex: annonceur)
-        else {
+        } elseif ($user->can('taches.own.validate')) {
+            $query->pourAgent($user->id);
+        } else {
             $query->whereRaw('1 = 0');
         }
 
-        // Filtre par statut si fourni
         if (! empty($filtres['statut'])) {
             $query->where('statut', $filtres['statut']);
         }

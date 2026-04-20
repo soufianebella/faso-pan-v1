@@ -257,7 +257,7 @@ Session 14b : RBAC Tâches — TERMINÉE
 Session 14c: Frontend Tâches
 Session 15 : Dashboard & Statistiques
 Semaine 5 — EN COURS
-  C Session 15 : Dashboard & Statistiques
+  Session 15 : Dashboard & Statistiques
      - StatistiquesService (logique métier extraite)
      - StatistiquesController (30 lignes propres)
      - DashboardView.vue : KPI + barres + donut + feed

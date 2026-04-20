@@ -12,6 +12,10 @@ export default defineConfig({
     tailwindcss(),
     vueDevTools(),
   ],
+  server: {
+    port: 5173,
+    strictPort: false, // Permet de basculer sur 5174 si 5173 est occupé
+  },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))

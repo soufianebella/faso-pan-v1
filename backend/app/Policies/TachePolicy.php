@@ -31,8 +31,9 @@ class TachePolicy
             return true;
         }
 
-        return $tache->agent_id === $user->id
-            && in_array($tache->statut, ['en_attente', 'en_cours']);
+        return $user->can('taches.own.validate')
+            && $tache->agent_id === $user->id
+            && in_array($tache->statut, ['en_attente', 'en_cours'], strict: true);
     }
 
     public function valider(User $user, Tache $tache): bool

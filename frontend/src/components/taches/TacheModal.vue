@@ -104,7 +104,7 @@
 </template>
 
 <script setup>
-import { ref }         from 'vue'
+import { ref, watch }  from 'vue'
 import { storeToRefs } from 'pinia'
 import { useTachesStore } from '@/stores/taches.store'
 
@@ -115,7 +115,13 @@ const { agents, tacheActuelle, isLoading, errors } = storeToRefs(store)
 
 const selectedAgentId = ref('')
 
+// Reset la sélection à chaque ouverture sur une nouvelle tâche
+watch(tacheActuelle, () => {
+  selectedAgentId.value = tacheActuelle.value?.agent?.id ?? ''
+}, { immediate: true })
+
 async function handleAssign() {
+  if (!tacheActuelle.value?.id) return
   try {
     await store.assignerAgent(
       tacheActuelle.value.id,
