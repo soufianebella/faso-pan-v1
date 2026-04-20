@@ -294,11 +294,61 @@ Frontend :
 - Route POST /avancer : Route::match(['patch','post'], ...) car navigateur
   n'envoie pas PATCH en multipart
 
+## 16. Session 16 — Filtres & Recherche — TERMINÉE
+
+### Livraisons
+- IndexPanneauRequest  — valide ville, statut, eclaire, search, per_page
+- IndexCampagneRequest — valide search, statut, annonceur, per_page
+- IndexTacheRequest    — valide statut, agent_id, campagne_id, per_page
+- CampagneController::index — logique filtre extraite vers CampagneService::lister()
+- TacheService::lister()   — ajout filtres agent_id + campagne_id
+- panneaux.store : filtre eclaire ajouté
+- taches.store   : filtre campagne_id ajouté
+
+### Règle ajoutée
+- Tout endpoint index() doit avoir un FormRequest dédié
+  (valide les query strings + authorize via Policy)
+- Injection SQL impossible : statut validé par in:... avant d'atteindre Eloquent
+
+## 17. Session 17 — UX + Validation — TERMINÉE
+
+### Livraisons
+- useToast.js composable — success/error/warning/info, auto-dismiss, état partagé
+- ToastContainer.vue — teleport body, animation slide, palette UI
+- ConfirmModal.vue — v-model, 3 variants danger/warning/primary, action callback
+- AppLayout.vue — ToastContainer monté une fois pour toute l'app
+- 12 alert()/confirm() remplacés dans TachesView, PanneauxView, CampagnesView, UsersView
+
+## 18. Session 18 — Sécurité Avancée — TERMINÉE
+
+### Vulnérabilités corrigées
+
+**1. Privilege Escalation — UpdateUserRequest**
+- Avant : `role` et `actif` dans rules() sans condition → un agent pouvait
+  tenter `PATCH /users/{id}` avec `role=super_admin`
+- Après : `$canManage = $user->can('gerer utilisateurs')`
+  → `['prohibited']` si non-gestionnaire (défense en profondeur)
+
+**2. Route orpheline — AuthController::updateProfile**
+- `PUT /me` enregistrée mais méthode absente → 500
+- Ajout de `updateProfile()` avec validation name/email/password
+  et protection unique() sur email
+
+**3. AffectationResource — parent::toArray() brut**
+- Violation de la règle "jamais de toArray() brut"
+- Remplacé par champs explicites + whenLoaded('campagne', 'face')
+
+**4. Rate Limiting global**
+- `throttle:60,1` ajouté au middleware group `auth:sanctum`
+- Login déjà protégé par `throttle:5,1` (inchangé)
+
+### Règles de sécurité validées
+- `prohibited` rule = refus avec message d'erreur 422 (meilleur que ignorer)
+- Rate limiting granulaire : login strict (5/min), API large (60/min)
+- Resource API : toujours lister les champs explicitement
+- updateProfile ≠ updateUser : pas de role/actif sur /me
+
 ### Prochaine Étape
-Session 15 : Dashboard & Statistiques
-Session 16 : Filtres & Recherche
-Session 17 : UX + Validation
-Session 18 : Sécurité avancée
 Session 19 : Refactor
 Session 20 : Tests finaux
 Session 21 : Préparation démo

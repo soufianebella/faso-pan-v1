@@ -57,6 +57,15 @@
       @saved="handleSaved"
     />
 
+    <ConfirmModal
+      v-model="confirm.show"
+      :title="confirm.title"
+      :message="confirm.message"
+      :variant="confirm.variant"
+      :confirm-label="confirm.label"
+      @confirm="confirm.action?.()"
+    />
+
   </div>
 </template>
 
@@ -67,6 +76,8 @@ import { useUsersStore }   from '@/stores/users.store'
 import UserTable           from '@/components/users/UserTable.vue'
 import UserPagination      from '@/components/users/UserPagination.vue'
 import UserModal           from '@/components/users/UserModal.vue'
+import ConfirmModal        from '@/components/ui/ConfirmModal.vue'
+import { useToast }        from '@/composables/useToast'
 
 const store = useUsersStore()
 
@@ -79,6 +90,8 @@ const {
 } = storeToRefs(store)
 
 const showModal = ref(false)
+const toast     = useToast()
+const confirm   = ref({ show: false, title: '', message: '', variant: 'danger', label: 'Confirmer', action: null })
 
 onMounted(() => store.fetchUsers())
 
@@ -93,9 +106,22 @@ function openEdit(user) {
   showModal.value = true
 }
 
-async function handleDelete(userId) {
-  if (!confirm('Confirmer la desactivation de cet utilisateur ?')) return
-  await store.removeUser(userId)
+function handleDelete(userId) {
+  confirm.value = {
+    show:    true,
+    title:   'Désactiver l\'utilisateur',
+    message: 'Cet utilisateur ne pourra plus se connecter. Confirmer ?',
+    variant: 'danger',
+    label:   'Désactiver',
+    action:  async () => {
+      try {
+        await store.removeUser(userId)
+        toast.success('Utilisateur désactivé.')
+      } catch (err) {
+        toast.error(err.response?.data?.message || 'Erreur lors de la désactivation.')
+      }
+    },
+  }
 }
 
 function handleClose() {

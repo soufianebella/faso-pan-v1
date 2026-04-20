@@ -87,6 +87,15 @@
       @saved="handleSaved"
     />
 
+    <ConfirmModal
+      v-model="confirm.show"
+      :title="confirm.title"
+      :message="confirm.message"
+      :variant="confirm.variant"
+      :confirm-label="confirm.label"
+      @confirm="confirm.action?.()"
+    />
+
   </div>
 </template>
 
@@ -97,6 +106,8 @@ import { useCampagnesStore }    from '@/stores/campagnes.store'
 import CampagneTable            from '@/components/campagnes/CampagneTable.vue'
 import CampagnePagination       from '@/components/campagnes/CampagnePagination.vue'
 import CampagneModal            from '@/components/campagnes/CampagneModal.vue'
+import ConfirmModal             from '@/components/ui/ConfirmModal.vue'
+import { useToast }             from '@/composables/useToast'
 
 const store = useCampagnesStore()
 
@@ -108,6 +119,8 @@ const {
 } = storeToRefs(store)
 
 const showModal = ref(false)
+const toast     = useToast()
+const confirm   = ref({ show: false, title: '', message: '', variant: 'warning', label: 'Confirmer', action: null })
 let debounceTimer = null
 
 onMounted(() => store.fetchCampagnes())
@@ -128,12 +141,21 @@ function openEdit(campagne) {
   showModal.value = true
 }
 
-async function handleArchive(id) {
-  if (!confirm('Confirmer la cloture de cette campagne ?')) return
-  try {
-    await store.archiveCampagne(id)
-  } catch (err) {
-    alert(err.response?.data?.message || 'Erreur lors de la cloture.')
+function handleArchive(id) {
+  confirm.value = {
+    show:    true,
+    title:   'Clôturer la campagne',
+    message: 'Cette campagne sera marquée comme expirée. Confirmer ?',
+    variant: 'warning',
+    label:   'Clôturer',
+    action:  async () => {
+      try {
+        await store.archiveCampagne(id)
+        toast.success('Campagne clôturée.')
+      } catch (err) {
+        toast.error(err.response?.data?.message || 'Erreur lors de la clôture.')
+      }
+    },
   }
 }
 

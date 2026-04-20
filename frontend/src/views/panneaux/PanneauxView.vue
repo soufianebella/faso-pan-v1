@@ -56,6 +56,15 @@
       @saved="handleSaved"
     />
 
+    <ConfirmModal
+      v-model="confirm.show"
+      :title="confirm.title"
+      :message="confirm.message"
+      :variant="confirm.variant"
+      :confirm-label="confirm.label"
+      @confirm="confirm.action?.()"
+    />
+
   </div>
 </template>
 
@@ -66,6 +75,8 @@ import { usePanneauxStore } from '@/stores/panneaux.store'
 import PanneauTable         from '@/components/panneaux/PanneauTable.vue'
 import PanneauPagination    from '@/components/panneaux/PanneauPagination.vue'
 import PanneauModal         from '@/components/panneaux/PanneauModal.vue'
+import ConfirmModal         from '@/components/ui/ConfirmModal.vue'
+import { useToast }         from '@/composables/useToast'
 
 const store = usePanneauxStore()
 
@@ -78,6 +89,8 @@ const {
 } = storeToRefs(store)
 
 const showModal = ref(false)
+const toast     = useToast()
+const confirm   = ref({ show: false, title: '', message: '', variant: 'danger', label: 'Confirmer', action: null })
 
 onMounted(() => store.fetchPanneaux())
 
@@ -103,12 +116,21 @@ function openEdit(panneau) {
   showModal.value = true
 }
 
-async function handleArchive(panneauId) {
-  if (!confirm('Confirmer l\'archivage de ce panneau ?')) return
-  try {
-    await store.archivePanneau(panneauId)
-  } catch (err) {
-    alert(err.response?.data?.message || 'Erreur lors de l\'archivage.')
+function handleArchive(panneauId) {
+  confirm.value = {
+    show:    true,
+    title:   'Archiver le panneau',
+    message: 'Ce panneau sera marqué hors service. Confirmer ?',
+    variant: 'danger',
+    label:   'Archiver',
+    action:  async () => {
+      try {
+        await store.archivePanneau(panneauId)
+        toast.success('Panneau archivé.')
+      } catch (err) {
+        toast.error(err.response?.data?.message || "Erreur lors de l'archivage.")
+      }
+    },
   }
 }
 

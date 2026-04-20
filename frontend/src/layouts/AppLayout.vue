@@ -79,6 +79,8 @@
 
     </div>
   </div>
+
+  <ToastContainer />
 </template>
 
 <script setup>
@@ -86,6 +88,7 @@ import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth.store'
 import NotificationDropdown from '@/components/notifications/NotificationDropdown.vue'
+import ToastContainer       from '@/components/ui/ToastContainer.vue'
 
 const auth  = useAuthStore()
 const route = useRoute()

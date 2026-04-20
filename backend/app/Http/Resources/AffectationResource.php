@@ -14,6 +14,14 @@ class AffectationResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        return parent::toArray($request);
+        return [
+            'id'          => $this->id,
+            'campagne_id' => $this->campagne_id,
+            'face_id'     => $this->face_id,
+            'date_debut'  => $this->date_debut,
+            'date_fin'    => $this->date_fin,
+            'campagne'    => $this->whenLoaded('campagne'),
+            'face'        => $this->whenLoaded('face'),
+        ];
     }
 }

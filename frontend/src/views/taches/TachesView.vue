@@ -414,6 +414,16 @@
       @saved="handleRealiserSaved"
     />
 
+    <!-- Confirm modal partagé -->
+    <ConfirmModal
+      v-model="confirm.show"
+      :title="confirm.title"
+      :message="confirm.message"
+      :variant="confirm.variant"
+      :confirm-label="confirm.label"
+      @confirm="confirm.action?.()"
+    />
+
     <!-- Input photo unique hors v-for — id natif, pas de ref Vue (évite le Proxy) -->
     <input
       id="photo-upload-input"
@@ -435,6 +445,8 @@ import TacheTable           from '@/components/taches/TacheTable.vue'
 import TacheModal           from '@/components/taches/TacheModal.vue'
 import TacheCreationModal   from '@/components/taches/TacheCreationModal.vue'
 import TacheRealiserModal   from '@/components/taches/TacheRealiserModal.vue'
+import ConfirmModal         from '@/components/ui/ConfirmModal.vue'
+import { useToast }         from '@/composables/useToast'
 
 const store = useTachesStore()
 const auth  = useAuthStore()
@@ -448,6 +460,18 @@ const showRealiserModal  = ref(false)
 const tacheARealiser     = ref(null)
 const photoUploadTacheId = ref(null)
 const search             = ref('')
+
+const toast = useToast()
+
+// ── Confirm modal state
+const confirm = ref({
+  show:    false,
+  title:   '',
+  message: '',
+  variant: 'primary',
+  label:   'Confirmer',
+  action:  null,
+})
 
 onMounted(() => store.fetchTaches())
 
@@ -585,23 +609,32 @@ function ouvrirModal(tache) {
   showModal.value = true
 }
 
-async function confirmerAvancement(id) {
+function confirmerAvancement(id) {
   const tache = taches.value.find(t => t.id === id)
   if (!tache) return
 
-  // Transition en_cours → realisee : on passe par la modal upload photo
+  // en_cours → realisee : modal upload photo
   if (tache.statut === 'en_cours') {
     tacheARealiser.value    = tache
     showRealiserModal.value = true
     return
   }
 
-  // en_attente → en_cours : simple confirmation
-  if (!confirm("Confirmer le demarrage de cette tache ?")) return
-  try {
-    await store.avancerTache(id)
-  } catch (err) {
-    alert(err.response?.data?.message ?? "Erreur lors de l'avancement.")
+  // en_attente → en_cours : confirm modal
+  confirm.value = {
+    show:    true,
+    title:   'Démarrer la tâche',
+    message: 'Confirmer le démarrage de cette tâche ?',
+    variant: 'primary',
+    label:   'Commencer',
+    action:  async () => {
+      try {
+        await store.avancerTache(id)
+        toast.success('Tâche démarrée.')
+      } catch (err) {
+        toast.error(err.response?.data?.message ?? "Erreur lors du démarrage.")
+      }
+    },
   }
 }
 
@@ -614,25 +647,24 @@ async function handlePhotoUpload(event) {
   const file    = event.target.files?.[0]
   const tacheId = photoUploadTacheId.value
 
-  // Reset pour permettre un re-upload du même fichier
   event.target.value = ''
-
   if (!file || !tacheId) return
 
   const ACCEPTED = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
   if (!ACCEPTED.includes(file.type)) {
-    alert('Format non supporté. Utilise JPEG, PNG ou WEBP.')
+    toast.error('Format non supporté. Utilise JPEG, PNG ou WEBP.')
     return
   }
   if (file.size > 5 * 1024 * 1024) {
-    alert('Image trop lourde (max 5 Mo).')
+    toast.error('Image trop lourde (max 5 Mo).')
     return
   }
 
   try {
     await store.updatePhoto(tacheId, file)
+    toast.success('Photo mise à jour.')
   } catch {
-    alert("Erreur lors de l'upload. Réessaie.")
+    toast.error("Erreur lors de l'upload.")
   } finally {
     photoUploadTacheId.value = null
   }
@@ -646,15 +678,25 @@ function fermerRealiserModal() {
 
 async function handleRealiserSaved() {
   fermerRealiserModal()
+  toast.success('Tâche marquée comme réalisée.')
   await store.fetchTaches(pagination.value.currentPage)
 }
 
-async function confirmerValidation(id) {
-  if (!confirm('Valider cette tache comme terminee ?')) return
-  try {
-    await store.validerTache(id)
-  } catch (err) {
-    alert(err.response?.data?.message ?? 'Erreur lors de la validation.')
+function confirmerValidation(id) {
+  confirm.value = {
+    show:    true,
+    title:   'Valider la tâche',
+    message: 'Confirmer la validation de cette tâche comme terminée ?',
+    variant: 'primary',
+    label:   'Valider',
+    action:  async () => {
+      try {
+        await store.validerTache(id)
+        toast.success('Tâche validée.')
+      } catch (err) {
+        toast.error(err.response?.data?.message ?? 'Erreur lors de la validation.')
+      }
+    },
   }
 }
 

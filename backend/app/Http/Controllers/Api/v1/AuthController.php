@@ -59,10 +59,31 @@ class AuthController extends Controller
 
     public function me(Request $request): JsonResponse
     {
-        //  $request->user() = utilisateur injecté par auth:sanctum
-        //    Pas besoin de requête DB supplémentaire
         return response()->json(
             new UserResource($request->user())
         );
+    }
+
+    public function updateProfile(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        $data = $request->validate([
+            'name'     => ['sometimes', 'required', 'string', 'max:100'],
+            'email'    => ['sometimes', 'required', 'email', 'max:150',
+                           \Illuminate\Validation\Rule::unique('users')->ignore($user->id)],
+            'password' => ['nullable', 'confirmed',
+                           \Illuminate\Validation\Rules\Password::min(8)],
+        ]);
+
+        if (isset($data['password'])) {
+            $data['password'] = \Illuminate\Support\Facades\Hash::make($data['password']);
+        } else {
+            unset($data['password']);
+        }
+
+        $user->update($data);
+
+        return response()->json(new UserResource($user->fresh()));
     }
 }

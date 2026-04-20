@@ -17,8 +17,8 @@ class UpdateUserRequest extends FormRequest
 
     public function rules(): array
     {
-        // $this->route('user') retourne le modèle User injecté par Route Model Binding
-        $userId = $this->route('user')->id;
+        $userId     = $this->route('user')->id;
+        $canManage  = $this->user()->can('gerer utilisateurs');
 
         return [
             'name'  => ['sometimes', 'required', 'string', 'max:100'],
@@ -27,15 +27,19 @@ class UpdateUserRequest extends FormRequest
                 'required',
                 'email',
                 'max:150',
-                // Ignore l'utilisateur courant pour éviter le faux conflit unique
                 Rule::unique('users')->ignore($userId),
             ],
 
-            // nullable : si absent ou null, on ne touche pas au mot de passe
             'password' => ['nullable', 'confirmed', Password::min(8)],
 
-            'role'  => ['sometimes', 'required', 'string', Rule::exists('roles', 'name')],
-            'actif' => ['sometimes', 'boolean'],
+            // Défense en profondeur : même si authorize() bloque déjà,
+            // un non-gestionnaire ne peut jamais modifier rôle ou statut.
+            'role'  => $canManage
+                ? ['sometimes', 'required', 'string', Rule::exists('roles', 'name')]
+                : ['prohibited'],
+            'actif' => $canManage
+                ? ['sometimes', 'boolean']
+                : ['prohibited'],
         ];
     }
 
