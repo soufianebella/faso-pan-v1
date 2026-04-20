@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\AvancerTacheRequest;
 use App\Http\Requests\StoreTacheRequest;
+use App\Http\Requests\UpdateTachePhotoRequest;
 use App\Http\Resources\TacheResource;
 use App\Http\Resources\UserResource;
 use App\Models\Tache;
@@ -104,6 +105,15 @@ class TacheController extends Controller
             $request->user(),
             $data
         );
+
+        return new TacheResource($tache);
+    }
+
+    public function updatePhoto(UpdateTachePhotoRequest $request, Tache $tache): TacheResource
+    {
+        $this->authorize('updatePhoto', $tache);
+
+        $tache = $this->tacheService->updatePhoto($tache, $request->file('photo'));
 
         return new TacheResource($tache);
     }

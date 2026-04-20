@@ -138,6 +138,21 @@ export const useTachesStore = defineStore('taches', () => {
     }
   }
 
+  async function updatePhoto(tacheId, file) {
+    isLoading.value = true
+    errors.value    = null
+    try {
+      const updated = await tachesApi.updatePhoto(tacheId, file)
+      const index = taches.value.findIndex(t => t.id === tacheId)
+      if (index !== -1) taches.value[index] = updated.data ?? updated
+    } catch (err) {
+      if (err.response?.status === 422) errors.value = err.response.data.errors
+      throw err
+    } finally {
+      isLoading.value = false
+    }
+  }
+
   async function validerTache(id) {
     isLoading.value = true
     errors.value    = null
@@ -187,6 +202,7 @@ export const useTachesStore = defineStore('taches', () => {
     avancerTache,
     validerTache,
     assignerAgent,
+    updatePhoto,
     setTacheActuelle,
     clearErrors,
   }

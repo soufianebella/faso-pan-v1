@@ -78,10 +78,14 @@ Route::prefix('v1')->group(function () {
             '/taches/{tache}',
             [TacheController::class, 'show']
         );
-        Route::patch(
+        // PATCH pour JSON simple, POST pour multipart (upload photo)
+        Route::match(['patch', 'post'],
             '/taches/{tache}/avancer',
             [TacheController::class, 'avancer']
         );
+
+        // Remplacement photo sans changement de statut
+        Route::post('/taches/{tache}/photo', [TacheController::class, 'updatePhoto']);
 
         // ── Statistiques 
         Route::get(

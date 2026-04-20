@@ -88,6 +88,22 @@ class TacheService
         return $tache->fresh(['agent', 'validePar', 'affectation.face.panneau']);
     }
 
+    /**
+     * Met à jour uniquement la photo d'une tâche (sans changer le statut).
+     */
+    public function updatePhoto(Tache $tache, UploadedFile $photo): Tache
+    {
+        if ($tache->photo_path) {
+            Storage::disk('public')->delete($tache->photo_path);
+        }
+
+        $path = $photo->store('taches/' . $tache->id, 'public');
+
+        $tache->update(['photo_path' => $path]);
+
+        return $tache->fresh(['agent', 'affectation.face.panneau']);
+    }
+
     public function assigner(Tache $tache, int $agentId): Tache
     {
         $tache->update(['agent_id' => $agentId]);

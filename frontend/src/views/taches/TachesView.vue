@@ -193,24 +193,42 @@
               </div>
             </template>
 
-            <!-- ── Réalisées : placeholder photo ── -->
+            <!-- ── Réalisées : zone photo cliquable ── -->
             <template v-else-if="col.statut === 'realisee'">
               <div
-                class="flex items-center justify-center rounded-lg mb-3"
-                style="height: 52px; background-color: #F9FAFB; border: 1.5px dashed #E5E7EB"
+                class="relative rounded-lg mb-3 overflow-hidden group cursor-pointer"
+                style="height: 80px"
+                @click="triggerPhotoUpload(tache)"
+                :title="tache.photo_url ? 'Cliquez pour remplacer la photo' : 'Cliquez pour ajouter la photo de pose'"
               >
-                <i
-                  v-if="!tache.photo_path"
-                  class="fa-solid fa-camera text-xl"
-                  style="color: #D1D5DB"
-                ></i>
-                <img
-                  v-else
-                  :src="tache.photo_path"
-                  class="h-full w-full object-cover rounded-lg"
-                  alt="Photo pose"
-                />
+                <!-- Sans photo : fond pointillé -->
+                <div
+                  v-if="!tache.photo_url"
+                  class="w-full h-full flex flex-col items-center justify-center gap-1 transition-colors group-hover:bg-blue-50"
+                  style="background-color: #F9FAFB; border: 1.5px dashed #E5E7EB; border-radius: 8px"
+                >
+                  <i class="fa-solid fa-camera-retro text-xl" style="color: #D1D5DB"></i>
+                  <span class="text-[10px] font-medium" style="color: #9CA3AF">Ajouter une photo</span>
+                </div>
+
+                <!-- Avec photo : miniature + overlay hover -->
+                <template v-else>
+                  <img
+                    :src="tache.photo_url"
+                    class="w-full h-full object-cover"
+                    alt="Photo pose"
+                  />
+                  <div
+                    class="absolute inset-0 flex flex-col items-center justify-center gap-1
+                           opacity-0 group-hover:opacity-100 transition-opacity"
+                    style="background-color: rgba(27,59,138,0.75)"
+                  >
+                    <i class="fa-solid fa-camera text-lg text-white"></i>
+                    <span class="text-[10px] font-semibold text-white">Remplacer</span>
+                  </div>
+                </template>
               </div>
+
             </template>
 
             <!-- ── Footer commun : avatar agent + date/action ── -->
@@ -396,6 +414,15 @@
       @saved="handleRealiserSaved"
     />
 
+    <!-- Input photo unique hors v-for — id natif, pas de ref Vue (évite le Proxy) -->
+    <input
+      id="photo-upload-input"
+      type="file"
+      accept="image/jpeg,image/jpg,image/png,image/webp"
+      class="hidden"
+      @change="handlePhotoUpload"
+    />
+
   </div>
 </template>
 
@@ -415,11 +442,12 @@ const auth  = useAuthStore()
 const { taches, isLoading, filtres, pagination, tacheActuelle } = storeToRefs(store)
 
 const viewMode  = ref('tableau')
-const showModal         = ref(false)
-const showCreationModal = ref(false)
-const showRealiserModal = ref(false)
-const tacheARealiser    = ref(null)
-const search            = ref('')
+const showModal          = ref(false)
+const showCreationModal  = ref(false)
+const showRealiserModal  = ref(false)
+const tacheARealiser     = ref(null)
+const photoUploadTacheId = ref(null)
+const search             = ref('')
 
 onMounted(() => store.fetchTaches())
 
@@ -574,6 +602,39 @@ async function confirmerAvancement(id) {
     await store.avancerTache(id)
   } catch (err) {
     alert(err.response?.data?.message ?? "Erreur lors de l'avancement.")
+  }
+}
+
+function triggerPhotoUpload(tache) {
+  photoUploadTacheId.value = tache.id
+  document.getElementById('photo-upload-input').click()
+}
+
+async function handlePhotoUpload(event) {
+  const file    = event.target.files?.[0]
+  const tacheId = photoUploadTacheId.value
+
+  // Reset pour permettre un re-upload du même fichier
+  event.target.value = ''
+
+  if (!file || !tacheId) return
+
+  const ACCEPTED = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
+  if (!ACCEPTED.includes(file.type)) {
+    alert('Format non supporté. Utilise JPEG, PNG ou WEBP.')
+    return
+  }
+  if (file.size > 5 * 1024 * 1024) {
+    alert('Image trop lourde (max 5 Mo).')
+    return
+  }
+
+  try {
+    await store.updatePhoto(tacheId, file)
+  } catch {
+    alert("Erreur lors de l'upload. Réessaie.")
+  } finally {
+    photoUploadTacheId.value = null
   }
 }
 

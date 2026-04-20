@@ -36,6 +36,19 @@ class TachePolicy
             && in_array($tache->statut, ['en_attente', 'en_cours'], strict: true);
     }
 
+    // Remplacement de la photo sans changement de statut
+    // L'agent assigné peut mettre à jour la photo tant que la tâche n'est pas validée
+    public function updatePhoto(User $user, Tache $tache): bool
+    {
+        if ($user->can('taches.manage')) {
+            return true;
+        }
+
+        return $user->can('taches.own.validate')
+            && $tache->agent_id === $user->id
+            && $tache->statut !== 'validee';
+    }
+
     public function valider(User $user, Tache $tache): bool
     {
         return $user->can('taches.manage')

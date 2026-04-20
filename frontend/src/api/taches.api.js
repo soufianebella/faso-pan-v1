@@ -17,18 +17,27 @@ export const tachesApi = {
     }
 
     const fd = new FormData()
-    fd.append('_method', 'PATCH')
     fd.append('photo', payload.photo)
     if (payload.note)            fd.append('note', payload.note)
     if (payload.latitude_pose)   fd.append('latitude_pose', payload.latitude_pose)
     if (payload.longitude_pose)  fd.append('longitude_pose', payload.longitude_pose)
 
+    // Content-Type: undefined → axios supprime le header par défaut (application/json)
+    // et laisse le navigateur générer multipart/form-data avec le boundary correct
     return http.post(`/v1/taches/${id}/avancer`, fd, {
-      headers: { 'Content-Type': 'multipart/form-data' },
+      headers: { 'Content-Type': undefined },
     })
   },
 
-  assigner:                   (id, data) => http.patch(`/v1/taches/${id}/assigner`, data),
+  updatePhoto: (id, file) => {
+    const fd = new FormData()
+    fd.append('photo', file)
+    return http.post(`/v1/taches/${id}/photo`, fd, {
+      headers: { 'Content-Type': undefined },
+    })
+  },
+
+  assigner: (id, data) => http.patch(`/v1/taches/${id}/assigner`, data),
   getAgents:                  ()         => http.get('/v1/agents'),
   getAffectationsDisponibles: ()         => http.get('/v1/taches/affectations-disponibles'),
 }

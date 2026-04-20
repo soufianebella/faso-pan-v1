@@ -11,8 +11,12 @@ class AvancerTacheRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        // L'autorisation fine est gérée par la Policy dans le Controller
-        return $this->user() !== null;
+        /** @var \App\Models\Tache $tache */
+        $tache = $this->route('tache');
+
+        // Agent : ne peut avancer que sa propre tache, si elle n'est pas terminée
+        // Gestionnaire/Admin : peut avancer n'importe quelle tache
+        return $this->user()->can('update', $tache);
     }
 
     public function rules(): array
