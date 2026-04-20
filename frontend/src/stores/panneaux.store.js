@@ -18,9 +18,10 @@ export const usePanneauxStore = defineStore('panneaux', () => {
   })
 
   const filtres = reactive({
-    search: '',
-    ville:  '',
-    statut: '',
+    search:  '',
+    ville:   '',
+    statut:  '',
+    eclaire: '',
   })
 
   // ── Actions
@@ -32,9 +33,10 @@ export const usePanneauxStore = defineStore('panneaux', () => {
     try {
       const response = await panneauxApi.getAll({
         page,
-        search: filtres.search || undefined,
-        ville:  filtres.ville  || undefined,
-        statut: filtres.statut || undefined,
+        search:  filtres.search   || undefined,
+        ville:   filtres.ville    || undefined,
+        statut:  filtres.statut   || undefined,
+        eclaire: filtres.eclaire  !== '' ? filtres.eclaire : undefined,
       })
 
       panneaux.value = response.data

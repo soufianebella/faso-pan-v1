@@ -171,6 +171,17 @@ class TacheService
             $query->where('statut', $filtres['statut']);
         }
 
-        return $query->latest()->paginate(20);
+        if (! empty($filtres['agent_id'])) {
+            $query->where('agent_id', $filtres['agent_id']);
+        }
+
+        if (! empty($filtres['campagne_id'])) {
+            $query->whereHas(
+                'affectation',
+                fn ($q) => $q->where('campagne_id', $filtres['campagne_id'])
+            );
+        }
+
+        return $query->latest()->paginate($filtres['per_page'] ?? 20);
     }
 }

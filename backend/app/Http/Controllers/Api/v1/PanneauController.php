@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\IndexPanneauRequest;
 use App\Http\Requests\StorePanneauRequest;
 use App\Http\Resources\PanneauResource;
 use App\Http\Requests\UpdatePanneauRequest;
@@ -20,13 +21,9 @@ class PanneauController extends Controller
         protected readonly PanneauService $panneauService
     ) {}
 
-    public function index(Request $request): AnonymousResourceCollection
+    public function index(IndexPanneauRequest $request): AnonymousResourceCollection
     {
-        $this->authorize('viewAny', Panneau::class);
-
-        $panneaux = $this->panneauService->filtrer(
-            $request->only(['ville', 'statut', 'eclaire', 'search'])
-        );
+        $panneaux = $this->panneauService->filtrer($request->validated());
 
         return PanneauResource::collection($panneaux);
     }

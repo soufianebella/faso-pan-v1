@@ -21,8 +21,9 @@ export const useTachesStore = defineStore('taches', () => {
   })
 
   const filtres = reactive({
-    statut:   '',
-    agent_id: '',
+    statut:      '',
+    agent_id:    '',
+    campagne_id: '',
   })
 
   // ── Actions 
@@ -34,8 +35,9 @@ export const useTachesStore = defineStore('taches', () => {
     try {
       const response = await tachesApi.getAll({
         page,
-        statut:   filtres.statut   || undefined,
-        agent_id: filtres.agent_id || undefined,
+        statut:      filtres.statut      || undefined,
+        agent_id:    filtres.agent_id    || undefined,
+        campagne_id: filtres.campagne_id || undefined,
       })
 
       taches.value = response.data

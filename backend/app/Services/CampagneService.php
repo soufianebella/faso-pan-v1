@@ -8,6 +8,7 @@ use App\Models\Campagne;
 use App\Models\Face;
 use App\Models\User;
 use App\Services\NotificationService;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 
@@ -17,6 +18,29 @@ class CampagneService
         protected readonly DisponibiliteService  $disponibilite,
         protected readonly NotificationService   $notificationService,
     ) {}
+
+    public function lister(array $filtres = []): LengthAwarePaginator
+    {
+        return Campagne::with(['affectations.face.panneau'])
+            ->withCount('affectations')
+            ->when(
+                $filtres['search'] ?? null,
+                fn ($q, $v) => $q->where(function ($q) use ($v) {
+                    $q->where('nom', 'like', "%{$v}%")
+                      ->orWhere('annonceur', 'like', "%{$v}%");
+                })
+            )
+            ->when(
+                $filtres['statut'] ?? null,
+                fn ($q, $v) => $q->where('statut', $v)
+            )
+            ->when(
+                $filtres['annonceur'] ?? null,
+                fn ($q, $v) => $q->where('annonceur', 'like', "%{$v}%")
+            )
+            ->latest()
+            ->paginate($filtres['per_page'] ?? 15);
+    }
 
     public function create(array $data, int $createdBy): Campagne
     {

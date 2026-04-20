@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\IndexCampagneRequest;
 use App\Http\Requests\StoreCampagneRequest;
 use App\Http\Resources\CampagneResource;
 use App\Models\Campagne;
@@ -21,23 +22,9 @@ class CampagneController extends Controller
         protected readonly DisponibiliteService $disponibilite,
     ) {}
 
-    public function index(Request $request): AnonymousResourceCollection
+    public function index(IndexCampagneRequest $request): AnonymousResourceCollection
     {
-        $this->authorize('viewAny', Campagne::class);
-
-        $campagnes = Campagne::with(['affectations.face.panneau'])
-            ->withCount('affectations')
-            ->when(
-                $request->search,
-                fn($q, $v) => $q->where('nom', 'like', "%{$v}%")
-                    ->orWhere('annonceur', 'like', "%{$v}%")
-            )
-            ->when(
-                $request->statut,
-                fn($q, $v) => $q->where('statut', $v)
-            )
-            ->latest()
-            ->paginate(15);
+        $campagnes = $this->campagneService->lister($request->validated());
 
         return CampagneResource::collection($campagnes);
     }

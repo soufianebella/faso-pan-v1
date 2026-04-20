@@ -302,12 +302,6 @@ Session 18 : Sécurité avancée
 Session 19 : Refactor
 Session 20 : Tests finaux
 Session 21 : Préparation démo
-Session 16 : Filtres & Recherche
-Session 17 : UX + Validation
-Session 18 : Sécurité avancée
-Session 19 : Refactor
-Session 20 : Tests finaux
-Session 21 : Préparation démo
 
 ## 15. Comment Reprendre dans une Nouvelle Conversation
 

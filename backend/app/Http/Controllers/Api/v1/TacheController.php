@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\AvancerTacheRequest;
+use App\Http\Requests\IndexTacheRequest;
 use App\Http\Requests\StoreTacheRequest;
 use App\Http\Requests\UpdateTachePhotoRequest;
 use App\Http\Resources\TacheResource;
@@ -23,13 +24,11 @@ class TacheController extends Controller
         protected readonly TacheService $tacheService
     ) {}
 
-    public function index(Request $request): AnonymousResourceCollection
+    public function index(IndexTacheRequest $request): AnonymousResourceCollection
     {
-        $this->authorize('viewAny', Tache::class);
-
         $taches = $this->tacheService->lister(
             $request->user(),
-            $request->only(['statut'])
+            $request->validated()
         );
 
         return TacheResource::collection($taches);
