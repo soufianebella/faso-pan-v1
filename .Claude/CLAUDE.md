@@ -353,6 +353,72 @@ Session 19 : Refactor
 Session 20 : Tests finaux
 Session 21 : Préparation démo
 
+## 19. Session 19 — Refactor — TERMINÉE
+
+### Corrections appliquées
+
+**1. Face.$fillable — bug silencieux critique**
+- `statut` absent du $fillable → mises à jour ignorées silencieusement
+- Ajout de `'statut'` dans Face::$fillable
+
+**2. AuthController — logique métier extraite vers UserService**
+- `updateProfile()` contenait hash password + update dans le controller
+- Ajout de `UserService::updateProfile(array $data): User`
+- AuthController délègue au service (pattern Controller→Service respecté)
+- Import `Hash` orphelin supprimé
+
+**3. CampagneController::facesDisponibles — FormRequest**
+- Validation inline `$request->validate()` dans le controller
+- Création de `IndexFacesDisponiblesRequest` (authorize + rules)
+- Controller utilise `$request->validated()` uniquement
+
+**4. AffectationResource — parent::toArray() supprimé**
+- Remplacé par champs explicites + whenLoaded('campagne', 'face')
+
+**5. Stubs vides supprimés (6 fichiers orphelins)**
+- Controllers : FaceController.php, AffectationController.php
+- Requests : UpdateCampagneRequest.php (authorize:false dangereux),
+  StoreAffectationRequest.php, StoreFaceRequest.php, UpdateTacheRequest.php
+
+### Règles de refactor validées
+- Controller ne hash jamais un password — c'est le Service
+- Tout endpoint → son FormRequest dédié (même GET avec query strings)
+- Stubs non utilisés = dette technique + risque sécurité (authorize:false)
+
+## 20. Session 19b — Export CSV — TERMINÉE
+
+### Livraisons
+
+**Backend**
+- ExportService — streaming via response()->streamDownload() + chunk(100)
+  → mémoire constante, même sur 10 000 panneaux
+- Inventaire : référence, ville, face, surface, statut, campagne en cours
+- Campagnes : nom, annonceur, dates, statut, nb faces, créateur
+- UTF-8 BOM (\xEF\xBB\xBF) en tête → Excel détecte les accents
+- fputcsv avec séparateur ';' (standard Excel francophone)
+
+**FormRequests**
+- ExportInventaireRequest : ville, statut (in:...), eclaire (boolean)
+- ExportCampagnesRequest  : annonceur, statut (in:...+tous)
+- authorize via permissions Spatie
+
+**Frontend**
+- exports.api.js : axios direct (pas l'instance http partagée)
+  → car l'interceptor retourne response.data et on perd les headers
+  → Bearer token ré-injecté manuellement
+- Blob → URL.createObjectURL → <a download> → revoke
+- Nom de fichier extrait du Content-Disposition header
+- ExportModal : choix type + filtres conditionnels, state loading
+
+### Bugs évités
+- window.open : n'envoie PAS le Bearer token → 401
+- (bool) "0" vaut true en PHP → filter_var(..., FILTER_VALIDATE_BOOLEAN)
+- Content-Type: 'text/csv; charset=UTF-8' obligatoire pour Excel
+
+### Prochaine Étape
+Session 20 : Tests finaux
+Session 21 : Préparation démo
+
 ## 15. Comment Reprendre dans une Nouvelle Conversation
 
 Colle ce fichier CLAUDE.md en début de conversation avec :

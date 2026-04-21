@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\CampagneController;
+use App\Http\Controllers\Api\V1\ExportController;
 use App\Http\Controllers\Api\V1\PanneauController;
 use App\Http\Controllers\Api\V1\TacheController;
 use App\Http\Controllers\Api\V1\UserController;
@@ -90,6 +91,10 @@ Route::prefix('v1')->group(function () {
         // ── Statistiques
         Route::get('/stats/dashboard',     [StatistiqueController::class, 'dashboard']);
         Route::get('/stats/statistiques',  [StatistiqueController::class, 'statistiques']);
+
+        // ── Exports CSV (filtres validés via FormRequest)
+        Route::get('/exports/inventaire',         [ExportController::class, 'inventaire']);
+        Route::get('/exports/campagnes-actives',  [ExportController::class, 'campagnesActives']);
 
 
 

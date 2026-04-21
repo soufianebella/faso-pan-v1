@@ -45,50 +45,52 @@
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
 
         <!-- Total Panneaux -->
-        <div class="bg-white rounded-xl p-6 shadow-sm border relative overflow-hidden"
-             style="border-color: #E5E7EB; border-top: 4px solid #1B3B8A">
-          <p class="text-sm font-medium" style="color: #6B7280">Total Panneaux</p>
-          <h3 class="text-3xl font-bold mt-1" style="color: #1B3B8A">
-            {{ stats.kpi.total_panneaux }}
-          </h3>
-          <i class="fa-solid fa-sign-hanging absolute -right-2 -bottom-2 text-5xl"
-             style="opacity: 0.05; color: #1B3B8A"></i>
+        <div class="bg-white rounded-xl p-6 shadow-sm border flex items-center justify-between"
+             style="border-color: #E5E7EB; border-left: 4px solid #1B3B8A">
+          <div>
+            <p class="text-sm font-medium" style="color: #6B7280">Total Panneaux</p>
+            <h3 class="text-3xl font-bold mt-1" style="color: #1B3B8A">
+              {{ stats.kpi.total_panneaux }}
+            </h3>
+          </div>
+          <i class="fa-solid fa-sign-hanging text-5xl" style="color: #E5E7EB"></i>
         </div>
 
         <!-- Faces Libres -->
-        <div class="bg-white rounded-xl p-6 shadow-sm border relative overflow-hidden"
-             style="border-color: #E5E7EB; border-top: 4px solid #27AE60">
-          <p class="text-sm font-medium" style="color: #6B7280">Faces Libres</p>
-          <h3 class="text-3xl font-bold mt-1" style="color: #27AE60">
-            {{ stats.kpi.faces_libres }}
-          </h3>
-          <p class="text-xs mt-1" style="color: #27AE60">
-            disponibles a la vente
-          </p>
-          <i class="fa-solid fa-circle-check absolute -right-2 -bottom-2 text-5xl"
-             style="opacity: 0.05; color: #27AE60"></i>
+        <div class="bg-white rounded-xl p-6 shadow-sm border flex items-center justify-between"
+             style="border-color: #E5E7EB; border-left: 4px solid #27AE60">
+          <div>
+            <p class="text-sm font-medium" style="color: #6B7280">Faces Libres</p>
+            <h3 class="text-3xl font-bold mt-1" style="color: #27AE60">
+              {{ stats.kpi.faces_libres }}
+            </h3>
+            <p class="text-xs mt-1" style="color: #27AE60">disponibles a la vente</p>
+          </div>
+          <i class="fa-regular fa-circle-check text-5xl" style="color: #E5E7EB"></i>
         </div>
 
         <!-- Faces Occupées -->
-        <div class="bg-white rounded-xl p-6 shadow-sm border relative overflow-hidden"
-             style="border-color: #E5E7EB; border-top: 4px solid #F97316">
-          <p class="text-sm font-medium" style="color: #6B7280">Faces Occupees</p>
-          <h3 class="text-3xl font-bold mt-1" style="color: #F97316">
-            {{ stats.kpi.faces_occupees }}
-          </h3>
-          <i class="fa-solid fa-layer-group absolute -right-2 -bottom-2 text-5xl"
-             style="opacity: 0.05; color: #F97316"></i>
+        <div class="bg-white rounded-xl p-6 shadow-sm border flex items-center justify-between"
+             style="border-color: #E5E7EB; border-left: 4px solid #F97316">
+          <div>
+            <p class="text-sm font-medium" style="color: #6B7280">Faces Occupees</p>
+            <h3 class="text-3xl font-bold mt-1" style="color: #F97316">
+              {{ stats.kpi.faces_occupees }}
+            </h3>
+          </div>
+          <i class="fa-solid fa-layer-group text-5xl" style="color: #E5E7EB"></i>
         </div>
 
         <!-- Expirent 7j -->
-        <div class="bg-white rounded-xl p-6 shadow-sm border relative overflow-hidden"
-             style="border-color: #E5E7EB; border-top: 4px solid #EF4444">
-          <p class="text-sm font-medium" style="color: #6B7280">Expirent dans 7j</p>
-          <h3 class="text-3xl font-bold mt-1" style="color: #EF4444">
-            {{ stats.kpi.expirent_7j }}
-          </h3>
-          <i class="fa-solid fa-triangle-exclamation absolute -right-2 -bottom-2 text-5xl"
-             style="opacity: 0.05; color: #EF4444"></i>
+        <div class="bg-white rounded-xl p-6 shadow-sm border flex items-center justify-between"
+             style="border-color: #E5E7EB; border-left: 4px solid #EF4444">
+          <div>
+            <p class="text-sm font-medium" style="color: #6B7280">Expirent dans 7j</p>
+            <h3 class="text-3xl font-bold mt-1" style="color: #EF4444">
+              {{ stats.kpi.expirent_7j }}
+            </h3>
+          </div>
+          <i class="fa-regular fa-triangle-exclamation text-5xl" style="color: #E5E7EB"></i>
         </div>
 
       </div>
@@ -283,6 +285,16 @@ const dateAujourdhui = new Date().toLocaleDateString('fr-FR', {
   year:    'numeric',
 })
 
+// Traduction mois anglais → français (Carbon translatedFormat('M') renvoie en anglais par défaut)
+const MOIS_FR = {
+  Jan: 'Jan', Feb: 'Fév', Mar: 'Mar', Apr: 'Avr',
+  May: 'Mai', Jun: 'Juin', Jul: 'Juil', Aug: 'Aoû',
+  Sep: 'Sep', Oct: 'Oct', Nov: 'Nov', Dec: 'Déc',
+}
+function traduireMois(mois) {
+  return MOIS_FR[mois] ?? mois
+}
+
 // ── ApexCharts — Barres occupation mensuelle ───────────────────────
 const barSeries = computed(() => [{
   name: "Occupation %",
@@ -297,7 +309,7 @@ const barOptions = computed(() => ({
   },
   dataLabels: { enabled: false },
   xaxis: {
-    categories: stats.value?.occupation_mensuelle?.map(m => m.mois) ?? [],
+    categories: stats.value?.occupation_mensuelle?.map(m => traduireMois(m.mois)) ?? [],
     labels: { style: { colors: '#6B7280', fontSize: '11px' } },
   },
   yaxis: {

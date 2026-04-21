@@ -50,6 +50,19 @@ class UserService
         });
     }
 
+    public function updateProfile(User $user, array $data): User
+    {
+        $userData = Arr::except($data, ['password_confirmation']);
+
+        if (empty($userData['password'])) {
+            unset($userData['password']);
+        }
+
+        $user->update($userData);
+
+        return $user->fresh();
+    }
+
     public function deactivate(User $user, User $admin): void
     {
         // Validation métier : hors transaction car aucune opération DB impliquée

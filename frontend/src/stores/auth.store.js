@@ -35,16 +35,12 @@ export const useAuthStore = defineStore("auth", () => {
   /**
    * Logout : révocation serveur → nettoyage local → redirection
    */
-  async function logout() {
-    //  try/catch : même si le serveur est down,
-    // on nettoie le state local
-    try {
-      await authApi.logout();
-    } catch {
-      // Token déjà révoqué ou serveur injoignable → on continue
-    } finally {
-      _clearSession();
-    }
+  function logout() {
+    // Nettoyage immédiat → l'UI réagit sans attendre le réseau
+    _clearSession();
+    // Révocation serveur en arrière-plan — on ignore le résultat
+    // (token déjà invalide côté client de toute façon)
+    authApi.logout().catch(() => {});
   }
 
   /**

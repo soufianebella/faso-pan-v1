@@ -49,50 +49,48 @@
       <!-- KPI Cards -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
 
-        <div class="bg-white p-6 rounded-xl shadow-sm border relative overflow-hidden"
-          style="border-color: #E5E7EB; border-top: 4px solid #1B3B8A">
-          <p class="text-sm font-medium" style="color: #6B7280">
-            Taux d'occupation
-          </p>
-          <h3 class="text-3xl font-bold mt-1" style="color: #1B3B8A">
-            {{ stats.kpi.taux_occupation }}%
-          </h3>
-          <i class="fa-solid fa-chart-pie absolute -right-2 -bottom-2 text-5xl"
-            style="opacity: 0.04; color: #1B3B8A"></i>
+        <div class="bg-white p-6 rounded-xl shadow-sm border flex items-center justify-between"
+          style="border-color: #E5E7EB; border-left: 4px solid #1B3B8A">
+          <div>
+            <p class="text-sm font-medium" style="color: #6B7280">Taux d'occupation</p>
+            <h3 class="text-3xl font-bold mt-1" style="color: #1B3B8A">
+              {{ stats.kpi.taux_occupation }}%
+            </h3>
+          </div>
+          <i class="fa-solid fa-chart-pie text-5xl" style="color: #E5E7EB"></i>
         </div>
 
-        <div class="bg-white p-6 rounded-xl shadow-sm border relative overflow-hidden"
-          style="border-color: #E5E7EB; border-top: 4px solid #27AE60">
-          <p class="text-sm font-medium" style="color: #6B7280">
-            Campagnes actives
-          </p>
-          <h3 class="text-3xl font-bold mt-1" style="color: #27AE60">
-            {{ stats.kpi.campagnes_actives }}
-          </h3>
-          <i class="fa-solid fa-bullhorn absolute -right-2 -bottom-2 text-5xl"
-            style="opacity: 0.04; color: #27AE60"></i>
+        <div class="bg-white p-6 rounded-xl shadow-sm border flex items-center justify-between"
+          style="border-color: #E5E7EB; border-left: 4px solid #27AE60">
+          <div>
+            <p class="text-sm font-medium" style="color: #6B7280">Campagnes actives</p>
+            <h3 class="text-3xl font-bold mt-1" style="color: #27AE60">
+              {{ stats.kpi.campagnes_actives }}
+            </h3>
+          </div>
+          <i class="fa-solid fa-bullhorn text-5xl" style="color: #E5E7EB"></i>
         </div>
 
-        <div class="bg-white p-6 rounded-xl shadow-sm border relative overflow-hidden"
-          style="border-color: #E5E7EB; border-top: 4px solid #F97316">
-          <p class="text-sm font-medium" style="color: #6B7280">
-            Taches en attente
-          </p>
-          <h3 class="text-3xl font-bold mt-1" style="color: #F97316">
-            {{ stats.kpi.taches_attente }}
-          </h3>
-          <i class="fa-solid fa-clock absolute -right-2 -bottom-2 text-5xl" style="opacity: 0.04; color: #F97316"></i>
+        <div class="bg-white p-6 rounded-xl shadow-sm border flex items-center justify-between"
+          style="border-color: #E5E7EB; border-left: 4px solid #F97316">
+          <div>
+            <p class="text-sm font-medium" style="color: #6B7280">Taches en attente</p>
+            <h3 class="text-3xl font-bold mt-1" style="color: #F97316">
+              {{ stats.kpi.taches_attente }}
+            </h3>
+          </div>
+          <i class="fa-regular fa-clock text-5xl" style="color: #E5E7EB"></i>
         </div>
 
-        <div class="bg-white p-6 rounded-xl shadow-sm border relative overflow-hidden"
-          style="border-color: #E5E7EB; border-top: 4px solid #7C3AED">
-          <p class="text-sm font-medium" style="color: #6B7280">
-            Revenu estime (FCFA)
-          </p>
-          <h3 class="text-3xl font-bold mt-1" style="color: #7C3AED">
-            {{ formaterPrix(stats.kpi.revenu_estime) }}
-          </h3>
-          <i class="fa-solid fa-wallet absolute -right-2 -bottom-2 text-5xl" style="opacity: 0.04; color: #7C3AED"></i>
+        <div class="bg-white p-6 rounded-xl shadow-sm border flex items-center justify-between"
+          style="border-color: #E5E7EB; border-left: 4px solid #7C3AED">
+          <div>
+            <p class="text-sm font-medium" style="color: #6B7280">Revenu estime (FCFA)</p>
+            <h3 class="text-3xl font-bold mt-1" style="color: #7C3AED">
+              {{ formaterPrix(stats.kpi.revenu_estime) }}
+            </h3>
+          </div>
+          <i class="fa-solid fa-wallet text-5xl" style="color: #E5E7EB"></i>
         </div>
 
       </div>
@@ -188,6 +186,11 @@
 
     </template>
 
+    <ExportModal
+      :show="showExportModal"
+      @close="showExportModal = false"
+    />
+
   </div>
 </template>
 
@@ -195,9 +198,20 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useStatistiquesStore } from '@/stores/statistiques.store'
+import ExportModal from '@/components/exports/ExportModal.vue'
 
 const store = useStatistiquesStore()
 const { stats, isLoading } = storeToRefs(store)
+
+// Traduction mois anglais → français
+const MOIS_FR = {
+  Jan: 'Jan', Feb: 'Fév', Mar: 'Mar', Apr: 'Avr',
+  May: 'Mai', Jun: 'Juin', Jul: 'Juil', Aug: 'Aoû',
+  Sep: 'Sep', Oct: 'Oct', Nov: 'Nov', Dec: 'Déc',
+}
+function traduireMois(mois) {
+  return MOIS_FR[mois] ?? mois
+}
 
 const periode = ref('ce_mois')
 
@@ -234,7 +248,7 @@ const evolutionOptions = computed(() => ({
     },
   },
   xaxis: {
-    categories: stats.value?.evolution?.categories ?? [],
+    categories: stats.value?.evolution?.categories?.map(traduireMois) ?? [],
     labels: { style: { colors: '#6B7280', fontSize: '11px' } },
   },
   yaxis: {
@@ -308,11 +322,10 @@ function couleurOccupation(taux) {
   return '#EF4444'
 }
 
+const showExportModal = ref(false)
+
 function exporterCSV() {
-  window.open(
-    `/api/v1/stats/statistiques/export?periode=${periode.value}`,
-    '_blank'
-  )
+  showExportModal.value = true
 }
 
 onMounted(() => store.fetchStats(periode.value))

@@ -85,13 +85,14 @@
 
 <script setup>
 import { computed } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth.store'
 import NotificationDropdown from '@/components/notifications/NotificationDropdown.vue'
 import ToastContainer       from '@/components/ui/ToastContainer.vue'
 
-const auth  = useAuthStore()
-const route = useRoute()
+const auth   = useAuthStore()
+const route  = useRoute()
+const router = useRouter()
 
 // ── Règles de visibilité par rôle ────────────────────────────────────────────
 // roles: null = tous les rôles authentifiés
@@ -166,7 +167,8 @@ const initiales = computed(() => {
     : parts[0].substring(0, 2).toUpperCase()
 })
 
-async function handleLogout() {
-  await auth.logout()
+function handleLogout() {
+  auth.logout()                        // synchrone — nettoie le state immédiatement
+  router.push({ name: 'login' })       // redirection instantanée
 }
 </script>

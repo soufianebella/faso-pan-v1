@@ -19,7 +19,7 @@ class Face extends Model
         'numero',
         'largeur',
         'hauteur',
-
+        'statut',
     ];
 
     protected $casts = [

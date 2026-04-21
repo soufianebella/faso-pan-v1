@@ -6,13 +6,13 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\IndexCampagneRequest;
+use App\Http\Requests\IndexFacesDisponiblesRequest;
 use App\Http\Requests\StoreCampagneRequest;
 use App\Http\Resources\CampagneResource;
 use App\Models\Campagne;
 use App\Services\CampagneService;
 use App\Services\DisponibiliteService;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class CampagneController extends Controller
@@ -69,16 +69,11 @@ class CampagneController extends Controller
      * Retourne les faces disponibles sur une période.
      * Appelé par le frontend avant la création d'une campagne.
      */
-    public function facesDisponibles(Request $request): JsonResponse
+    public function facesDisponibles(IndexFacesDisponiblesRequest $request): JsonResponse
     {
-        $request->validate([
-            'date_debut' => ['required', 'date'],
-            'date_fin'   => ['required', 'date', 'after:date_debut'],
-        ]);
-
         $faces = $this->disponibilite->facesDisponibles(
-            $request->input('date_debut'),
-            $request->input('date_fin'),
+            $request->validated('date_debut'),
+            $request->validated('date_fin'),
         );
 
         return response()->json(['data' => $faces]);

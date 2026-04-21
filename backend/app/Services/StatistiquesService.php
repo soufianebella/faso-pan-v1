@@ -108,30 +108,38 @@ class StatistiquesService
 
     private function occupationMensuelle(): array
     {
-        $totalFaces = Face::count(); // constant — hors boucle
+        $totalFaces  = Face::count();
+        $annee       = now()->year;
+        $moisActuel  = now()->month;
 
-        $debut12 = now()->subMonths(11)->startOfMonth()->toDateString();
-        $fin12   = now()->endOfMonth()->toDateString();
+        // Fenêtre : Jan → Déc de l'année courante
+        $debutAnnee = "{$annee}-01-01";
+        $finAnnee   = "{$annee}-12-31";
 
-        // 1 seule requête pour toute la fenêtre de 12 mois
+        // 1 seule requête pour toute l'année
         $affectations = Affectation::select(['face_id', 'date_debut', 'date_fin'])
-            ->where('date_debut', '<=', $fin12)
-            ->where('date_fin',   '>=', $debut12)
+            ->where('date_debut', '<=', $finAnnee)
+            ->where('date_fin',   '>=', $debutAnnee)
             ->get();
 
         $mois = [];
-        for ($i = 11; $i >= 0; $i--) {
-            $debut = now()->subMonths($i)->startOfMonth()->toDateString();
-            $fin   = now()->subMonths($i)->endOfMonth()->toDateString();
+        // Toujours Jan (1) → Déc (12) — ordre croissant fixe
+        for ($m = 1; $m <= 12; $m++) {
+            $date  = \Carbon\Carbon::create($annee, $m, 1);
+            $debut = $date->startOfMonth()->toDateString();
+            $fin   = $date->copy()->endOfMonth()->toDateString();
 
-            $occupees = $affectations
-                ->filter(fn ($a) => $a->date_debut <= $fin && $a->date_fin >= $debut)
-                ->pluck('face_id')
-                ->unique()
-                ->count();
+            // Mois futurs → taux 0 (pas encore de données)
+            $occupees = $m <= $moisActuel
+                ? $affectations
+                    ->filter(fn ($a) => $a->date_debut <= $fin && $a->date_fin >= $debut)
+                    ->pluck('face_id')
+                    ->unique()
+                    ->count()
+                : 0;
 
             $mois[] = [
-                'mois' => now()->subMonths($i)->translatedFormat('M'),
+                'mois' => $date->locale('en')->isoFormat('MMM'), // ex: Jan, Feb...
                 'taux' => $totalFaces > 0
                     ? round($occupees / $totalFaces * 100, 1)
                     : 0,
@@ -216,10 +224,11 @@ class StatistiquesService
 
     private function evolutionParVille(): array
     {
-        $villes = Panneau::distinct()->pluck('ville')->take(3);
-
-        $debut12 = now()->subMonths(11)->startOfMonth()->toDateString();
-        $fin12   = now()->endOfMonth()->toDateString();
+        $villes      = Panneau::distinct()->pluck('ville')->take(3);
+        $annee       = now()->year;
+        $moisActuel  = now()->month;
+        $debutAnnee  = "{$annee}-01-01";
+        $finAnnee    = "{$annee}-12-31";
 
         // 1 requête : faces indexées par ville
         $facesParVille = Face::select(['id', 'panneau_id'])
@@ -228,15 +237,18 @@ class StatistiquesService
             ->groupBy('panneau.ville')
             ->map(fn ($faces) => $faces->pluck('id'));
 
-        // 1 requête : toutes les affectations sur 12 mois
+        // 1 requête : toutes les affectations de l'année courante
         $affectations = Affectation::select(['face_id', 'date_debut', 'date_fin'])
-            ->where('date_debut', '<=', $fin12)
-            ->where('date_fin',   '>=', $debut12)
+            ->where('date_debut', '<=', $finAnnee)
+            ->where('date_fin',   '>=', $debutAnnee)
             ->get();
 
+        // Categories Jan → Déc fixes
         $categories = [];
-        for ($i = 11; $i >= 0; $i--) {
-            $categories[] = now()->subMonths($i)->translatedFormat('M');
+        for ($m = 1; $m <= 12; $m++) {
+            $categories[] = \Carbon\Carbon::create($annee, $m, 1)
+                ->locale('en')
+                ->isoFormat('MMM'); // Jan, Feb, Mar...
         }
 
         $series = [];
@@ -245,9 +257,15 @@ class StatistiquesService
             $total   = $faceIds->count();
             $data    = [];
 
-            for ($i = 11; $i >= 0; $i--) {
-                $debut = now()->subMonths($i)->startOfMonth()->toDateString();
-                $fin   = now()->subMonths($i)->endOfMonth()->toDateString();
+            for ($m = 1; $m <= 12; $m++) {
+                if ($m > $moisActuel) {
+                    $data[] = 0;
+                    continue;
+                }
+
+                $date  = \Carbon\Carbon::create($annee, $m, 1);
+                $debut = $date->startOfMonth()->toDateString();
+                $fin   = $date->copy()->endOfMonth()->toDateString();
 
                 $occupees = $affectations
                     ->filter(fn ($a) =>

@@ -5,13 +5,18 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\UserResource;
+use Illuminate\Support\Facades\Hash;
 use App\Models\User;
+use App\Services\UserService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
+    public function __construct(
+        protected readonly UserService $userService,
+    ) {}
+
     public function login(Request $request): JsonResponse
     {
         $data = $request->validate([
@@ -76,14 +81,8 @@ class AuthController extends Controller
                            \Illuminate\Validation\Rules\Password::min(8)],
         ]);
 
-        if (isset($data['password'])) {
-            $data['password'] = \Illuminate\Support\Facades\Hash::make($data['password']);
-        } else {
-            unset($data['password']);
-        }
-
-        $user->update($data);
-
-        return response()->json(new UserResource($user->fresh()));
+        return response()->json(
+            new UserResource($this->userService->updateProfile($user, $data))
+        );
     }
 }
