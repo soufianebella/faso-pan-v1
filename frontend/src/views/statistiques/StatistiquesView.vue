@@ -102,14 +102,26 @@
           <h3 class="text-sm font-bold uppercase tracking-wider mb-6" style="color: #374151">
             Evolution taux occupation — 12 mois
           </h3>
-          <apexchart type="area" height="280" :options="evolutionOptions" :series="evolutionSeries" />
+          <apexchart
+            v-if="chartReady && evolutionSeries.length"
+            :key="'evolution-' + evolutionSeries.length"
+            type="area" height="280"
+            :options="evolutionOptions"
+            :series="evolutionSeries"
+          />
         </div>
 
         <div class="bg-white p-6 rounded-xl shadow-sm border" style="border-color: #E5E7EB">
           <h3 class="text-sm font-bold uppercase tracking-wider mb-6" style="color: #374151">
             Top 5 Annonceurs
           </h3>
-          <apexchart type="bar" height="280" :options="annonceursOptions" :series="annonceursSeries" />
+          <apexchart
+            v-if="chartReady && annonceursSeries[0]?.data?.length"
+            :key="'annonceurs-' + annonceursSeries[0]?.data?.length"
+            type="bar" height="280"
+            :options="annonceursOptions"
+            :series="annonceursSeries"
+          />
         </div>
 
       </div>
@@ -121,14 +133,26 @@
           <h3 class="text-sm font-bold uppercase tracking-wider mb-4 text-left" style="color: #374151">
             Statut des faces
           </h3>
-          <apexchart type="donut" height="280" :options="donutOptions" :series="donutSeries" />
+          <apexchart
+            v-if="chartReady && donutSeries.length"
+            :key="'donut-' + donutSeries.join()"
+            type="donut" height="280"
+            :options="donutOptions"
+            :series="donutSeries"
+          />
         </div>
 
         <div class="bg-white p-6 rounded-xl shadow-sm border" style="border-color: #E5E7EB">
           <h3 class="text-sm font-bold uppercase tracking-wider mb-6" style="color: #374151">
             Taches par statut ce mois
           </h3>
-          <apexchart type="bar" height="280" :options="tachesOptions" :series="tachesSeries" />
+          <apexchart
+            v-if="chartReady && tachesSeries[0]?.data?.length"
+            :key="'taches-' + tachesSeries[0]?.data?.length"
+            type="bar" height="280"
+            :options="tachesOptions"
+            :series="tachesSeries"
+          />
         </div>
 
       </div>
@@ -195,13 +219,17 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, nextTick, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useStatistiquesStore } from '@/stores/statistiques.store'
 import ExportModal from '@/components/exports/ExportModal.vue'
 
 const store = useStatistiquesStore()
 const { stats, isLoading } = storeToRefs(store)
+
+// Bloque le rendu ApexCharts jusqu'après le premier paint DOM
+// (fix "Element not found" lors de la navigation via vue-router)
+const chartReady = ref(false)
 
 // Traduction mois anglais → français
 const MOIS_FR = {
@@ -264,10 +292,13 @@ const annonceursSeries = computed(() => [{
 }])
 
 const annonceursOptions = computed(() => ({
-  chart: { type: 'bar', toolbar: { show: false } },
-  plotOptions: { bar: { horizontal: true, borderRadius: 4, barHeight: '50%' } },
-  colors: ['#F97316'],
+  chart: { type: 'bar', toolbar: { show: false }, fontFamily: 'inherit' },
+  plotOptions: {
+    bar: { horizontal: true, borderRadius: 4, barHeight: '50%', distributed: true },
+  },
+  colors: ['#1B3B8A', '#F97316', '#27AE60', '#7C3AED', '#6B7280'],
   dataLabels: { enabled: false },
+  legend: { show: false },
   xaxis: {
     categories: stats.value?.top_annonceurs?.map(a => a.nom) ?? [],
     labels: { style: { colors: '#6B7280', fontSize: '11px' } },
@@ -328,5 +359,9 @@ function exporterCSV() {
   showExportModal.value = true
 }
 
-onMounted(() => store.fetchStats(periode.value))
+onMounted(async () => {
+  await nextTick()       // attend que le DOM de la route soit peint
+  chartReady.value = true
+  store.fetchStats(periode.value)
+})
 </script>

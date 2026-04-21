@@ -126,6 +126,7 @@ const { notifications, count, isLoading } = storeToRefs(store)
 
 const open        = ref(false)
 const dropdownRef = ref(null)
+let   pollInterval = null
 
 function toggleDropdown() {
   open.value = !open.value
@@ -167,13 +168,11 @@ function getIconClass(type) {
 onMounted(() => {
   store.fetchCount()
   document.addEventListener('click', handleClickOutside)
-
-  // Polling toutes les 30 secondes
-  const interval = setInterval(() => store.fetchCount(), 30000)
-  onUnmounted(() => clearInterval(interval))
+  pollInterval = setInterval(() => store.fetchCount(), 30000)
 })
 
 onUnmounted(() => {
+  clearInterval(pollInterval)
   document.removeEventListener('click', handleClickOutside)
 })
 </script>

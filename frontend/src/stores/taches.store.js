@@ -57,8 +57,8 @@ export const useTachesStore = defineStore('taches', () => {
     try {
       const response                = await tachesApi.getAffectationsDisponibles()
       affectationsDisponibles.value = response.data
-    } catch (err) {
-      console.error('Erreur chargement affectations:', err)
+    } catch {
+      // Echec silencieux — la liste reste vide, l'UI gère l'état
     } finally {
       isLoadingAffectations.value = false
     }
@@ -86,8 +86,8 @@ export const useTachesStore = defineStore('taches', () => {
     try {
       const response = await tachesApi.getAgents()
       agents.value   = response.data
-    } catch (err) {
-      console.error('Erreur chargement agents:', err)
+    } catch {
+      // Echec silencieux — agents reste vide, le sélecteur sera désactivé
     }
   }
 

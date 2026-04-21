@@ -16,7 +16,7 @@ const routes = [
       {
         path: "",
         name: "dashboard",
-        component: () => import("@/views/auth/DashboardView.vue"),
+        component: () => import("@/views/dashboard/DashboardView.vue"),
       },
       {
         path: "users",
@@ -38,29 +38,6 @@ const routes = [
         name: "taches",
         component: () => import("@/views/taches/TachesView.vue"),
       },
-      {
-        path: "statistiques",
-        name: "statistiques",
-        component: () => import("@/views/statistiques/StatistiquesView.vue"),
-      },
-      {
-        path: "campagnes",
-        name: "campagnes",
-        component: () => import("@/views/campagnes/CampagnesView.vue"),
-      },
-
-      {
-        path: "taches",
-        name: "taches",
-        component: () => import("@/views/taches/TachesView.vue"),
-      },
-
-      {
-        path: "",
-        name: "dashboard",
-        component: () => import("@/views/dashboard/DashboardView.vue"),
-      },
-
       {
         path: "statistiques",
         name: "statistiques",

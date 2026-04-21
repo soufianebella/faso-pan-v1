@@ -18,6 +18,12 @@
             Ville
           </th>
           <th
+            class="p-4 text-xs font-semibold uppercase tracking-wider hidden md:table-cell"
+            style="color: #1b3b8a"
+          >
+            Quartier
+          </th>
+          <th
             class="p-4 text-xs font-semibold uppercase tracking-wider"
             style="color: #1b3b8a"
           >
@@ -51,7 +57,7 @@
       </thead>
       <tbody class="divide-y divide-[#E5E7EB]">
         <tr v-if="panneaux.length === 0">
-          <td colspan="7" class="py-12 text-center" style="color: #9ca3af">
+          <td colspan="8" class="py-12 text-center" style="color: #9ca3af">
             <div class="flex flex-col items-center gap-2">
               <i class="fa-solid fa-sign-hanging text-3xl"></i>
               <span class="text-sm font-medium"> Aucun panneau trouve </span>
@@ -69,6 +75,10 @@
 
           <td class="p-4 text-sm" style="color: #6b7280">
             {{ panneau.ville }}
+          </td>
+
+          <td class="p-4 text-sm hidden md:table-cell" style="color: #6b7280">
+            {{ panneau.quartier || '—' }}
           </td>
 
           <td class="p-4 text-sm" style="color: #374151">
@@ -116,10 +126,13 @@
             </button>
             <button
               @click="$emit('archive', panneau.id)"
-              class="p-1.5 hover:bg-red-50 rounded text-red-600 transition-colors"
+              class="p-1.5 rounded transition-colors"
+              style="color: #9CA3AF"
               title="Archiver"
+              @mouseenter="$event.currentTarget.style.color='#EF4444'; $event.currentTarget.style.backgroundColor='#FEF2F2'"
+              @mouseleave="$event.currentTarget.style.color='#9CA3AF'; $event.currentTarget.style.backgroundColor=''"
             >
-              <i class="fa-solid fa-box-archive"></i>
+              <i class="fa-solid fa-trash-can text-sm"></i>
             </button>
           </td>
         </tr>

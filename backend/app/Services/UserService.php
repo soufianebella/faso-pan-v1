@@ -63,6 +63,11 @@ class UserService
         return $user->fresh();
     }
 
+    public function findByEmail(string $email): ?User
+    {
+        return User::where('email', $email)->first();
+    }
+
     public function deactivate(User $user, User $admin): void
     {
         // Validation métier : hors transaction car aucune opération DB impliquée

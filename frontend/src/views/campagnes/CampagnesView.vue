@@ -5,67 +5,72 @@
     <div class="flex items-center justify-between flex-shrink-0">
       <div>
         <h1 class="text-2xl font-bold" style="color: #1B3B8A">
-          Campagnes Publicitaires
+          Campagnes
         </h1>
         <p class="text-sm mt-0.5" style="color: #6B7280">
-          {{ pagination.total }} campagnes enregistrees
+          {{ pagination.total }} campagne{{ pagination.total > 1 ? 's' : '' }} enregistrée{{ pagination.total > 1 ? 's' : '' }}
         </p>
       </div>
 
       <button
         @click="openCreate"
-        class="flex items-center gap-2 px-4 py-2 rounded
+        class="flex items-center gap-2 px-4 py-2 rounded-lg
                text-white text-sm font-medium shadow-sm transition-colors"
         style="background-color: #F97316"
         @mouseenter="$event.target.style.backgroundColor='#EA6C0A'"
         @mouseleave="$event.target.style.backgroundColor='#F97316'"
       >
-        <i class="fa-solid fa-bullhorn"></i>
+        <i class="fa-solid fa-plus"></i>
         Nouvelle campagne
       </button>
     </div>
 
-    <!-- Filtres -->
-    <div
-      class="flex gap-3 p-3 rounded-lg border flex-shrink-0 bg-white"
-      style="border-color: #E5E7EB"
-    >
-      <input
-        v-model="filtres.search"
-        @input="debouncedFetch"
-        type="text"
-        placeholder="Rechercher un annonceur ou une campagne..."
-        class="flex-1 border rounded px-3 py-2 text-sm outline-none transition-all"
-        style="border-color: #E5E7EB"
-        @focus="$event.target.style.borderColor='#F97316'"
-        @blur="$event.target.style.borderColor='#E5E7EB'"
-      />
-      <select
-        v-model="filtres.statut"
-        @change="store.fetchCampagnes(1)"
-        class="border rounded px-3 py-2 text-sm outline-none bg-white"
-        style="border-color: #E5E7EB"
-      >
-        <option value="">Tous les statuts</option>
-        <option value="preparation">En preparation</option>
-        <option value="active">Active</option>
-        <option value="expiree">Expiree</option>
-      </select>
+    <!-- Recherche + filtres pills -->
+    <div class="flex flex-col sm:flex-row gap-3 flex-shrink-0">
+
+      <div class="relative flex-1">
+        <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-xs"
+           style="color: #9CA3AF"></i>
+        <input
+          v-model="filtres.search"
+          @input="debouncedFetch"
+          type="text"
+          placeholder="Rechercher une campagne ou un annonceur..."
+          class="w-full pl-9 pr-4 py-2 border rounded-lg text-sm outline-none transition-all bg-white"
+          style="border-color: #E5E7EB"
+          @focus="$event.target.style.borderColor='#1B3B8A'"
+          @blur="$event.target.style.borderColor='#E5E7EB'"
+        />
+      </div>
+
+      <div class="flex items-center gap-1 bg-white border rounded-lg p-1 flex-shrink-0"
+           style="border-color: #E5E7EB">
+        <button
+          v-for="f in FILTRES_STATUT"
+          :key="f.value"
+          @click="setStatut(f.value)"
+          class="px-3 py-1.5 rounded-md text-xs font-medium transition-all"
+          :style="filtres.statut === f.value
+            ? 'background-color: #1B3B8A; color: #fff'
+            : 'color: #6B7280'"
+        >
+          {{ f.label }}
+        </button>
+      </div>
     </div>
 
-    <!-- Skeleton loader -->
-    <div v-if="isLoading" class="space-y-3 flex-1">
+    <!-- Skeleton -->
+    <div v-if="isLoading" class="space-y-2 flex-1">
       <div
-        v-for="i in 6"
-        :key="i"
-        class="h-16 w-full rounded animate-pulse"
-        style="background-color: #E5E7EB"
+        v-for="i in 6" :key="i"
+        class="h-16 w-full rounded-lg animate-pulse"
+        style="background-color: #F3F4F6"
       ></div>
     </div>
 
     <template v-else>
       <div
-        class="flex-1 overflow-auto bg-white rounded-lg border"
+        class="flex-1 overflow-auto bg-white rounded-xl border"
         style="border-color: #E5E7EB"
       >
         <CampagneTable
@@ -109,14 +114,15 @@ import CampagneModal            from '@/components/campagnes/CampagneModal.vue'
 import ConfirmModal             from '@/components/ui/ConfirmModal.vue'
 import { useToast }             from '@/composables/useToast'
 
-const store = useCampagnesStore()
+const FILTRES_STATUT = [
+  { label: 'Toutes',       value: '' },
+  { label: 'Actives',      value: 'active' },
+  { label: 'Préparation',  value: 'preparation' },
+  { label: 'Expirées',     value: 'expiree' },
+]
 
-const {
-  campagnes,
-  isLoading,
-  pagination,
-  filtres,
-} = storeToRefs(store)
+const store = useCampagnesStore()
+const { campagnes, isLoading, pagination, filtres } = storeToRefs(store)
 
 const showModal = ref(false)
 const toast     = useToast()
@@ -127,7 +133,12 @@ onMounted(() => store.fetchCampagnes())
 
 function debouncedFetch() {
   clearTimeout(debounceTimer)
-  debounceTimer = setTimeout(() => store.fetchCampagnes(1), 500)
+  debounceTimer = setTimeout(() => store.fetchCampagnes(1), 400)
+}
+
+function setStatut(val) {
+  filtres.value.statut = val
+  store.fetchCampagnes(1)
 }
 
 function openCreate() {
@@ -145,7 +156,7 @@ function handleArchive(id) {
   confirm.value = {
     show:    true,
     title:   'Clôturer la campagne',
-    message: 'Cette campagne sera marquée comme expirée. Confirmer ?',
+    message: 'Cette campagne sera marquée comme expirée. Cette action est irréversible.',
     variant: 'warning',
     label:   'Clôturer',
     action:  async () => {

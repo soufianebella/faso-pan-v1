@@ -106,6 +106,8 @@
             Taux d'occupation mensuel
           </h3>
           <apexchart
+            v-if="chartReady && barSeries[0]?.data?.length"
+            :key="'bar-' + barSeries[0].data.length"
             type="bar"
             height="280"
             :options="barOptions"
@@ -165,6 +167,8 @@
             Repartition par ville
           </h3>
           <apexchart
+            v-if="chartReady && donutSeries.length"
+            :key="'donut-' + donutSeries.join()"
             type="donut"
             height="250"
             :options="donutOptions"
@@ -271,12 +275,14 @@
 </template>
 
 <script setup>
-import { computed, onMounted } from 'vue'
+import { ref, computed, onMounted, nextTick } from 'vue'
 import { storeToRefs }         from 'pinia'
 import { useDashboardStore }   from '@/stores/dashboard.store'
 
 const store = useDashboardStore()
 const { stats, isLoading } = storeToRefs(store)
+
+const chartReady = ref(false)
 
 const dateAujourdhui = new Date().toLocaleDateString('fr-FR', {
   weekday: 'long',
@@ -376,5 +382,9 @@ function tacheColor(statut) {
   return TACHE_COLORS[statut] ?? '#E5E7EB'
 }
 
-onMounted(() => store.fetchStats())
+onMounted(async () => {
+  await nextTick()
+  chartReady.value = true
+  store.fetchStats()
+})
 </script>

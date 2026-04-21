@@ -23,8 +23,7 @@ export const useNotificationsStore = defineStore('notifications', () => {
     try {
       const response = await notificationsApi.compter()
       count.value    = response.count
-    } catch (err) {
-      console.error('Erreur fetchCount:', err)
+    } catch {
       count.value = 0
     }
   }

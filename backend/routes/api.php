@@ -98,22 +98,12 @@ Route::prefix('v1')->group(function () {
 
 
 
-        // routes/api.php — dans auth:sanctum
-        Route::get(
-            '/notifications',
-            [NotificationController::class, 'index']
-        );
-        Route::get(
-            '/notifications/count',
-            [NotificationController::class, 'compter']
-        );
-        Route::patch(
-            '/notifications/{notification}/lue',
-            [NotificationController::class, 'marquerLue']
-        );
-        Route::patch(
-            '/notifications/toutes-lues',
-            [NotificationController::class, 'marquerToutesLues']
-        );
+        // ── Notifications
+        // IMPORTANT : routes statiques déclarées AVANT les routes dynamiques
+        // pour éviter que {notification} capture "count" ou "toutes-lues"
+        Route::get('/notifications',             [NotificationController::class, 'index']);
+        Route::get('/notifications/count',       [NotificationController::class, 'compter']);
+        Route::patch('/notifications/toutes-lues', [NotificationController::class, 'marquerToutesLues']);
+        Route::patch('/notifications/{notification}/lue', [NotificationController::class, 'marquerLue']);
     });
 });

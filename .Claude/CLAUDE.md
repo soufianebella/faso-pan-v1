@@ -419,13 +419,69 @@ Session 21 : Préparation démo
 Session 20 : Tests finaux
 Session 21 : Préparation démo
 
-## 15. Comment Reprendre dans une Nouvelle Conversation
+## 21. Session 20 — Code Review & Corrections — TERMINÉE
+
+### Corrections appliquées
+
+**1. Router — routes dupliquées (CRITIQUE)**
+- `campagnes`, `taches`, `dashboard`, `statistiques` déclarés 2 fois
+- Premier `dashboard` pointait vers `@/views/auth/DashboardView.vue` (mauvais chemin)
+- Fix : doublons supprimés, chemin corrigé → `@/views/dashboard/DashboardView.vue`
+
+**2. console.error en production (MOYEN)**
+- `taches.store.js` (×2) et `notifications.store.js` (×1)
+- Remplacés par `catch { // Echec silencieux }` avec fallback métier conservé
+
+**3. AuthController — Eloquent direct dans le controller (MOYEN)**
+- `User::where('email', ...)` dans `login()` viole le pattern Controller→Service
+- Ajout de `UserService::findByEmail(string $email): ?User`
+- Controller utilise `$this->userService->findByEmail()`
+
+**4. Resources — parent::toArray() (BAS)**
+- `NotificationResource` → champs explicites (id, type, titre, message, lien, lu_at, created_at)
+- `CampagneCollection` → `$collects = CampagneResource::class`
+- `PanneauCollection`  → `$collects = PanneauResource::class`
+
+**5. Notifications — route order bug (CRITIQUE)**
+- `PATCH /notifications/{notification}/lue` déclaré AVANT `PATCH /notifications/toutes-lues`
+- Laravel capturait `toutes-lues` comme un ID → "Tout lire" ne fonctionnait jamais
+- Fix : routes statiques (`/count`, `/toutes-lues`) remontées AVANT la route dynamique
+
+**6. NotificationController::index() — Resource ignorée (MOYEN)**
+- Retournait la collection Eloquent brute au lieu de `NotificationResource::collection()`
+- Fix : wrapping ajouté
+
+**7. NotificationDropdown — onUnmounted dans onMounted (MOYEN)**
+- `clearInterval` enregistré à l'intérieur de `onMounted` → fuite mémoire possible
+- Fix : `pollInterval` déclaré au niveau setup, `clearInterval` dans le vrai `onUnmounted`
+
+**8. StatistiquesView — Top 5 Annonceurs tout orange (UI)**
+- `colors: ['#F97316']` + `distributed` absent → toutes les barres identiques
+- Fix : `distributed: true` + 5 couleurs palette + `legend: { show: false }`
+
+**9. PanneauTable — colonne Quartier manquante (UI)**
+- `quartier` présent dans `PanneauResource` mais absent du tableau
+- Ajouté entre Ville et Faces, `hidden md:table-cell` pour responsive
+- `colspan` corrigé 7 → 8
+
+**10. PanneauTable — icône Archiver datée (UI)**
+- `fa-box-archive` remplacé par `fa-trash-can` (FA6 moderne)
+- Style hover aligné sur le pattern `CampagneTable` (gris → rouge au survol)
+- Taille ajustée `text-xs` → `text-sm` pour équilibre visuel
+
+### Règles consolidées
+- Routes statiques TOUJOURS avant routes dynamiques dans un même préfixe
+- `distributed: true` obligatoire dans ApexCharts pour colorer par catégorie
+- `onUnmounted` jamais imbriqué dans `onMounted` → toujours au niveau setup
+- `console.error` interdit en production → catch silencieux avec fallback
+
+## 22. Comment Reprendre dans une Nouvelle Conversation
 
 Colle ce fichier CLAUDE.md en début de conversation avec :
 "Tu es mon Tech Lead sur le projet FASO PAN.
 Voici le contexte complet. On reprend à [session X]."
 
-## 16. Skills Activés
+## 23. Skills Activés
 
 | Situation                | Skill à lire                       |
 | ------------------------ | ---------------------------------- |

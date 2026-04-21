@@ -5,11 +5,10 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\UserResource;
-use Illuminate\Support\Facades\Hash;
-use App\Models\User;
 use App\Services\UserService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
@@ -24,7 +23,7 @@ class AuthController extends Controller
             'password' => 'required|string|min:8',
         ]);
 
-        $user = User::where('email', $data['email'])->first();
+        $user = $this->userService->findByEmail($data['email']);
 
        
         if (! $user || ! Hash::check($data['password'], $user->password)) {
