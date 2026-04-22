@@ -12,7 +12,6 @@ use App\Http\Requests\UpdatePanneauRequest;
 use App\Models\Panneau;
 use App\Services\PanneauService;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class PanneauController extends Controller

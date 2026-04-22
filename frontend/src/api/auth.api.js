@@ -12,4 +12,6 @@ export const authApi = {
    * Récupère les informations de l'utilisateur et ses rôles via le token actif
    */
   me: () => http.get("/v1/me"),
+
+  updateProfile: (data) => http.put("/v1/me", data),
 };

@@ -62,6 +62,12 @@ export const useAuthStore = defineStore("auth", () => {
    * Vérifie si l'utilisateur a un rôle donné
    * Usage : authStore.hasRole('super_admin')
    */
+  async function updateProfile(data) {
+    const updated = await authApi.updateProfile(data)
+    // Synchronise le state local sans nouveau fetchMe
+    user.value = { ...user.value, ...updated }
+  }
+
   function hasRole(role) {
     return userRole.value === role;
   }
@@ -87,6 +93,7 @@ export const useAuthStore = defineStore("auth", () => {
     login,
     logout,
     fetchMe,
+    updateProfile,
     hasRole,
   };
 });
