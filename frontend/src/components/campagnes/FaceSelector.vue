@@ -49,17 +49,9 @@
         v-for="face in faces"
         :key="face.id"
         @click="toggleFace(face)"
-        class="p-3 rounded-lg border-2 transition-all flex flex-col gap-1 relative"
+        class="p-3 rounded-lg border-2 transition-all flex flex-col gap-1 relative cursor-pointer"
         :style="getCardStyle(face)"
-        :class="face.statut === 'occupee' ? 'cursor-not-allowed' : 'cursor-pointer'"
       >
-        <!-- Icone verrou si occupee -->
-        <i
-          v-if="face.statut === 'occupee'"
-          class="fa-solid fa-lock absolute top-2 right-2 text-xs"
-          style="color: #9CA3AF"
-        ></i>
-
         <!-- Icone check si selectionnee -->
         <i
           v-if="isSelected(face.id)"
@@ -102,13 +94,8 @@ function isSelected(id) {
 }
 
 function getCardStyle(face) {
-  if (face.statut === 'occupee') {
-    return {
-      backgroundColor: '#F9FAFB',
-      borderColor:     '#E5E7EB',
-      opacity:         '0.5',
-    }
-  }
+  // Les faces reçues ici sont TOUTES disponibles sur la période demandée
+  // (filtrage backend via whereNotIn(chevauche)). Pas de check statut ici.
   if (isSelected(face.id)) {
     return {
       backgroundColor: '#FEF3DC',
@@ -122,8 +109,6 @@ function getCardStyle(face) {
 }
 
 function toggleFace(face) {
-  if (face.statut === 'occupee') return
-
   const selected = [...props.modelValue]
   const index    = selected.indexOf(face.id)
 

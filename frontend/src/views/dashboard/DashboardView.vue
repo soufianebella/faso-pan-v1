@@ -15,7 +15,7 @@
         @click="store.fetchStats()"
         class="p-2 rounded-lg transition-colors hover:bg-white"
         style="color: #6B7280"
-      >
+      >actualiser
         <i class="fa-solid fa-rotate" :class="{ 'fa-spin': isLoading }"></i>
       </button>
     </div>
@@ -64,7 +64,7 @@
             <h3 class="text-3xl font-bold mt-1" style="color: #27AE60">
               {{ stats.kpi.faces_libres }}
             </h3>
-            <p class="text-xs mt-1" style="color: #27AE60">disponibles a la vente</p>
+            <p class="text-xs mt-1" style="color: #27AE60">disponibles à la vente</p>
           </div>
           <i class="fa-regular fa-circle-check text-5xl" style="color: #E5E7EB"></i>
         </div>
@@ -148,7 +148,7 @@
                 class="text-xs px-2 py-1 rounded-full font-bold flex-shrink-0"
                 :style="badgeUrgenceStyle(item.jours)"
               >
-                J-{{ item.jours }}
+                J-{{ Math.round(item.jours) }}
               </span>
             </div>
           </div>
@@ -337,7 +337,7 @@ const barOptions = computed(() => ({
   grid: { borderColor: '#F3F4F6' },
 }))
 
-// ── ApexCharts — Donut répartition villes ─────────────────────────
+// ── ApexCharts — Donut répartition villes 
 const donutSeries = computed(() =>
   stats.value?.par_ville?.map(v => v.total) ?? []
 )
@@ -364,7 +364,7 @@ const donutOptions = computed(() => ({
   },
 }))
 
-// ── Helpers ────────────────────────────────────────────────────────
+// ── Helpers 
 function badgeUrgenceStyle(jours) {
   if (jours <= 2) return { backgroundColor: '#FEE2E2', color: '#EF4444' }
   if (jours <= 5) return { backgroundColor: '#FEF3DC', color: '#F97316' }

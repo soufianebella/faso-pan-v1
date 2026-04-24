@@ -16,7 +16,7 @@
             Nouvelle tache terrain
           </h3>
           <p class="text-xs mt-0.5" style="color: #6B7280">
-            Assigne une affectation a un agent de terrain.
+            Assigne une affectation à un agent de terrain.
           </p>
         </div>
         <button

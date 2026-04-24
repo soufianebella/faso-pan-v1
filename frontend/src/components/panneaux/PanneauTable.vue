@@ -165,9 +165,14 @@ function getStatusClass(statut) {
   }
 }
 
-// Formatage du texte pour l'affichage
+const STATUT_LABELS = {
+  actif:        'Actif',
+  maintenance:  'Maintenance',
+  hors_service: 'Hors service',
+}
+
 function formatStatut(statut) {
-  return statut.replace("_", " ").toUpperCase();
+  return STATUT_LABELS[statut] ?? statut
 }
 
 // Style conditionnel pour les faces libres

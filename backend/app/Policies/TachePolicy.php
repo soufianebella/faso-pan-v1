@@ -15,6 +15,11 @@ class TachePolicy
             || $user->can('taches.own.validate');
     }
 
+    public function create(User $user): bool
+    {
+        return $user->can('taches.manage');
+    }
+
     public function view(User $user, Tache $tache): bool
     {
         if ($user->can('taches.manage')) {

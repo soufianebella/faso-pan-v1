@@ -66,6 +66,7 @@ export const useCampagnesStore = defineStore('campagnes', () => {
 
     isLoadingFaces.value   = true
     facesDisponibles.value = []
+    errors.value           = null
 
     try {
       const response = await campagnesApi.getAvailableFaces({
@@ -74,11 +75,15 @@ export const useCampagnesStore = defineStore('campagnes', () => {
       })
       facesDisponibles.value = response.data
 
-    } catch {
-      // Dates invalides ou erreur réseau
-      // On vide la liste sans bloquer l'interface
+    } catch (err) {
       facesDisponibles.value = []
-
+      // 422 : dates invalides — on expose les erreurs pour que l'UI les affiche
+      if (err.response?.status === 422) {
+        errors.value = err.response.data.errors
+      } else if (err.response?.status !== 403) {
+        // 403 silencieux (permission), autre erreur → propage
+        throw err
+      }
     } finally {
       isLoadingFaces.value = false
     }
@@ -115,6 +120,12 @@ export const useCampagnesStore = defineStore('campagnes', () => {
     }
   }
 
+  async function deleteCampagne(id) {
+    await campagnesApi.forceDelete(id)
+    campagnes.value  = campagnes.value.filter(c => c.id !== id)
+    pagination.total = Math.max(0, pagination.total - 1)
+  }
+
   // ── Helpers 
 
   function setCampagneActuelle(campagne) {
@@ -146,6 +157,7 @@ export const useCampagnesStore = defineStore('campagnes', () => {
     fetchAvailableFaces,
     createCampagne,
     archiveCampagne,
+    deleteCampagne,
     setCampagneActuelle,
     clearErrors,
     resetFacesDisponibles,

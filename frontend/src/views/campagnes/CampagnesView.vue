@@ -77,6 +77,7 @@
           :campagnes="campagnes"
           @edit="openEdit"
           @archive="handleArchive"
+          @delete="handleDelete"
         />
       </div>
 
@@ -165,6 +166,24 @@ function handleArchive(id) {
         toast.success('Campagne clôturée.')
       } catch (err) {
         toast.error(err.response?.data?.message || 'Erreur lors de la clôture.')
+      }
+    },
+  }
+}
+
+function handleDelete(campagne) {
+  confirm.value = {
+    show:    true,
+    title:   'Supprimer définitivement',
+    message: `La campagne « ${campagne.nom} » et son historique d'affectations seront supprimés. Cette action est irréversible.`,
+    variant: 'danger',
+    label:   'Supprimer',
+    action:  async () => {
+      try {
+        await store.deleteCampagne(campagne.id)
+        toast.success('Campagne supprimée.')
+      } catch (err) {
+        toast.error(err.response?.data?.message || 'Erreur lors de la suppression.')
       }
     },
   }

@@ -162,7 +162,7 @@ class StatistiquesService
         ->map(fn ($a) => [
             'campagne' => $a->campagne?->nom ?? 'N/A',
             'panneau'  => $a->face?->panneau?->reference ?? 'N/A',
-            'jours'    => now()->diffInDays($a->date_fin),
+            'jours'    => (int) now()->diffInDays($a->date_fin),
         ])
         ->toArray();
     }

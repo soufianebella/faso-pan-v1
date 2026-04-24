@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\AssignerTacheRequest;
 use App\Http\Requests\AvancerTacheRequest;
 use App\Http\Requests\IndexTacheRequest;
 use App\Http\Requests\StoreTacheRequest;
@@ -15,7 +16,6 @@ use App\Models\Tache;
 use App\Models\User;
 use App\Services\TacheService;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class TacheController extends Controller
@@ -117,17 +117,11 @@ class TacheController extends Controller
         return new TacheResource($tache);
     }
 
-    public function assigner(Request $request, Tache $tache): TacheResource
+    public function assigner(AssignerTacheRequest $request, Tache $tache): TacheResource
     {
-        $this->authorize('assigner', $tache);
-
-        $request->validate([
-            'agent_id' => ['required', 'integer', 'exists:users,id'],
-        ]);
-
         $tache = $this->tacheService->assigner(
             $tache,
-            $request->input('agent_id')
+            $request->validated('agent_id')
         );
 
         return new TacheResource($tache);

@@ -66,15 +66,27 @@
 
             <!-- Filtres Inventaire -->
             <div v-if="typeExport === 'inventaire'" class="space-y-3 pt-2">
-              <div>
-                <label class="block text-xs font-medium mb-1" style="color: #6B7280">Ville</label>
-                <input
-                  v-model="filtresInventaire.ville"
-                  type="text"
-                  placeholder="Toutes les villes"
-                  class="w-full border rounded px-3 py-2 text-sm outline-none"
-                  style="border-color: #E5E7EB"
-                />
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-xs font-medium mb-1" style="color: #6B7280">Ville</label>
+                  <input
+                    v-model="filtresInventaire.ville"
+                    type="text"
+                    placeholder="Toutes les villes"
+                    class="w-full border rounded px-3 py-2 text-sm outline-none"
+                    style="border-color: #E5E7EB"
+                  />
+                </div>
+                <div>
+                  <label class="block text-xs font-medium mb-1" style="color: #6B7280">Quartier</label>
+                  <input
+                    v-model="filtresInventaire.quartier"
+                    type="text"
+                    placeholder="Tous les quartiers"
+                    class="w-full border rounded px-3 py-2 text-sm outline-none"
+                    style="border-color: #E5E7EB"
+                  />
+                </div>
               </div>
               <div class="grid grid-cols-2 gap-3">
                 <div>
@@ -124,10 +136,10 @@
                   class="w-full border rounded px-3 py-2 text-sm outline-none bg-white"
                   style="border-color: #E5E7EB"
                 >
+                  <option value="tous">Tous les statuts</option>
                   <option value="active">Actives uniquement</option>
                   <option value="preparation">En preparation</option>
                   <option value="expiree">Expirees</option>
-                  <option value="tous">Tous les statuts</option>
                 </select>
               </div>
             </div>
@@ -177,8 +189,9 @@ const toast      = useToast()
 const typeExport = ref('inventaire')
 const isExporting = ref(false)
 
-const filtresInventaire = reactive({ ville: '', statut: '', eclaire: '' })
-const filtresCampagnes  = reactive({ annonceur: '', statut: 'active' })
+const filtresInventaire = reactive({ ville: '', quartier: '', statut: '', eclaire: '' })
+// Defaut 'tous' : un filtre annonceur sur 'active' uniquement masquait trop de resultats
+const filtresCampagnes  = reactive({ annonceur: '', statut: 'tous' })
 
 function cleanFiltres(obj) {
   // Retire les valeurs vides avant envoi (evite params=&statut=)

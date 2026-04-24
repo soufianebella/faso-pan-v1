@@ -58,6 +58,11 @@ Route::prefix('v1')->group(function () {
             Route::apiResource('campagnes', CampagneController::class)
                 ->parameters(['campagnes' => 'campagne']);
 
+            // Suppression definitive (uniquement campagnes expirees)
+            Route::delete('/campagnes/{campagne}/force',
+                [CampagneController::class, 'forceDestroy']
+            );
+
             Route::get(
                 '/faces/disponibles',
                 [CampagneController::class, 'facesDisponibles']

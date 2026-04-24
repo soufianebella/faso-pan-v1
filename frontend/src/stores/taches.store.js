@@ -57,8 +57,10 @@ export const useTachesStore = defineStore('taches', () => {
     try {
       const response                = await tachesApi.getAffectationsDisponibles()
       affectationsDisponibles.value = response.data
-    } catch {
-      // Echec silencieux — la liste reste vide, l'UI gère l'état
+    } catch (err) {
+      // 403 : pas les droits — la liste reste vide, l'UI affiche le message générique
+      // Autre erreur : on propage pour que le composant puisse afficher un toast
+      if (err.response?.status !== 403) throw err
     } finally {
       isLoadingAffectations.value = false
     }

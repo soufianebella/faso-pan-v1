@@ -78,8 +78,12 @@ class TacheService
             }
 
             if ($nouveauStatut === 'validee') {
+                // valide_by hors $fillable → forceFill() pour contourner le guard
+                // Toujours assigné depuis $user->id (jamais depuis la requête HTTP)
                 $updates['valide_at'] = now();
-                $updates['valide_by'] = $user->id;
+                $tache->update($updates);
+                $tache->forceFill(['valide_by' => $user->id])->save();
+                return;
             }
 
             $tache->update($updates);
@@ -127,13 +131,18 @@ class TacheService
 
         return $tache->load([
             'agent:id,name',
-            'affectation.face.panneau:id,reference,ville',
-            'affectation.campagne:id,nom,annonceur',
+            'affectation' => fn ($q) => $q->with([
+                'face.panneau:id,reference,ville',
+                'campagne' => fn ($q) => $q->withTrashed()->select('id', 'nom', 'annonceur'),
+            ]),
         ]);
     }
 
     /**
      * Affectations sans tache — utilisées dans le formulaire de création.
+     * Inclut toutes les campagnes (même expirées) : une affectation sans tache
+     * représente une pose jamais réalisée — le gestionnaire doit pouvoir régulariser.
+     * Exclut les affectations orphelines (campagne ou panneau soft-deleté).
      */
     public function affectationsDisponibles(): \Illuminate\Database\Eloquent\Collection
     {
@@ -142,8 +151,13 @@ class TacheService
             'face:id,panneau_id,numero',
             'face.panneau:id,reference,ville',
         ])
+        // whereHas applique automatiquement le scope SoftDeletes :
+        // seules les campagnes avec deleted_at IS NULL passent le filtre.
+        // Les campagnes expirées (statut=expiree, deleted_at=null) sont conservées.
+        ->whereHas('campagne')
+        // Idem : exclut les affectations dont le panneau a été supprimé.
+        ->whereHas('face.panneau')
         ->whereDoesntHave('tache')
-        ->whereHas('campagne', fn ($q) => $q->whereIn('statut', ['preparation', 'active']))
         ->orderBy('date_fin')
         ->get();
     }
@@ -156,7 +170,11 @@ class TacheService
         $query = Tache::with([
             'agent:id,name',
             'affectation.face.panneau:id,reference,ville',
-            'affectation.campagne:id,nom,annonceur',
+            // withTrashed : affiche le nom même si la campagne a été supprimée
+            'affectation' => fn ($q) => $q->with([
+                'face.panneau:id,reference,ville',
+                'campagne'   => fn ($q) => $q->withTrashed()->select('id', 'nom', 'annonceur'),
+            ]),
         ]);
 
         if ($user->can('taches.manage')) {

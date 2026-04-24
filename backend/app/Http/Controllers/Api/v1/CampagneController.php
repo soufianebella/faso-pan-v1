@@ -66,6 +66,21 @@ class CampagneController extends Controller
     }
 
     /**
+     * Suppression definitive (soft delete) d'une campagne expiree.
+     * Policy::forceDelete() verifie que statut === 'expiree'.
+     */
+    public function forceDestroy(Campagne $campagne): JsonResponse
+    {
+        $this->authorize('forceDelete', $campagne);
+
+        $this->campagneService->supprimer($campagne);
+
+        return response()->json([
+            'message' => 'Campagne supprimee definitivement.',
+        ]);
+    }
+
+    /**
      * Retourne les faces disponibles sur une période.
      * Appelé par le frontend avant la création d'une campagne.
      */

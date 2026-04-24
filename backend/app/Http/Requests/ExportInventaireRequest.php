@@ -16,9 +16,10 @@ class ExportInventaireRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'ville'   => ['sometimes', 'nullable', 'string', 'max:100'],
-            'statut'  => ['sometimes', 'nullable', 'string', 'in:actif,maintenance,hors_service'],
-            'eclaire' => ['sometimes', 'nullable', 'boolean'],
+            'ville'    => ['sometimes', 'nullable', 'string', 'max:100'],
+            'quartier' => ['sometimes', 'nullable', 'string', 'max:100'],
+            'statut'   => ['sometimes', 'nullable', 'string', 'in:actif,maintenance,hors_service'],
+            'eclaire'  => ['sometimes', 'nullable', 'boolean'],
         ];
     }
 }

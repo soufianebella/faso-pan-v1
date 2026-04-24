@@ -6,8 +6,6 @@ namespace App\Services;
 
 use App\Models\Campagne;
 use App\Models\Face;
-use App\Models\User;
-use App\Services\NotificationService;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
@@ -15,8 +13,7 @@ use Illuminate\Support\Facades\DB;
 class CampagneService
 {
     public function __construct(
-        protected readonly DisponibiliteService  $disponibilite,
-        protected readonly NotificationService   $notificationService,
+        protected readonly DisponibiliteService $disponibilite,
     ) {}
 
     public function lister(array $filtres = []): LengthAwarePaginator
@@ -67,32 +64,12 @@ class CampagneService
                 Face::where('id', $faceId)
                     ->update(['statut' => 'occupee']);
 
-                // Générer la tâche terrain
-                $affectation->tache()->create([
-                    'statut' => 'en_attente',
-                ]);
+                // Pas de tâche automatique : le gestionnaire crée les tâches
+                // manuellement depuis le module Tâches, avec l'agent de son choix.
             }
 
-            // Étape 3 : notifier les agents assignés
-            // Recharge les affectations avec leurs tâches
-            $campagne->load('affectations.tache');
-
-            foreach ($campagne->affectations as $affectation) {
-                if ($affectation->tache?->agent_id) {
-                    $agent = User::find($affectation->tache->agent_id);
-                    if ($agent) {
-                        $this->notificationService->creerPourUser(
-                            user:    $agent,
-                            type:    'nouvelle_tache',
-                            titre:   'Nouvelle tache assignee',
-                            message: "Campagne {$campagne->nom} — panneau a installer.",
-                            lien:    '/taches',
-                        );
-                    }
-                }
-            }
-
-            // Étape 4 : retourner la campagne complète
+            // Étape 3 : retourner la campagne complète
+            // Les tâches seront créées manuellement par le gestionnaire (statut null ici).
             return $campagne->load([
                 'affectations.face.panneau',
                 'affectations.tache',
@@ -117,5 +94,18 @@ class CampagneService
             Face::whereIn('id', $faceIds)
                 ->update(['statut' => 'libre']);
         });
+    }
+
+    /**
+     * Suppression d'une campagne expiree.
+     * Soft delete uniquement la campagne : deleted_at est rempli,
+     * la ligne disparait des listes (scope SoftDeletes par defaut).
+     * Les affectations et taches associees restent en base pour l'audit
+     * et les statistiques historiques. Les faces sont deja 'libre' depuis
+     * la cloture. Une restauration reste possible via restore() si besoin.
+     */
+    public function supprimer(Campagne $campagne): void
+    {
+        $campagne->delete();
     }
 }

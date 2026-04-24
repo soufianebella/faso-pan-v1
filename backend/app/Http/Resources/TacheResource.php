@@ -45,7 +45,8 @@ class TacheResource extends JsonResource
                         ? new FaceResource($this->affectation->face)
                         : null
                 ),
-                'campagne'   => $this->affectation->relationLoaded('campagne')
+                // campagne peut être null si elle a été supprimée (soft delete)
+            'campagne'   => ($this->affectation->relationLoaded('campagne') && $this->affectation->campagne)
                     ? [
                         'id'        => $this->affectation->campagne->id,
                         'nom'       => $this->affectation->campagne->nom,

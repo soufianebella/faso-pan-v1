@@ -93,6 +93,17 @@
           >
             <i class="fa-solid fa-ban text-xs"></i>
           </button>
+          <button
+            v-else
+            @click="$emit('delete', campagne)"
+            title="Supprimer définitivement"
+            class="p-1.5 rounded-md transition-colors hover:bg-red-50"
+            style="color: #9CA3AF"
+            @mouseenter="$event.currentTarget.style.color='#EF4444'"
+            @mouseleave="$event.currentTarget.style.color='#9CA3AF'"
+          >
+            <i class="fa-solid fa-trash-can text-xs"></i>
+          </button>
         </div>
 
       </div>
@@ -105,7 +116,7 @@ defineProps({
   campagnes: { type: Array, required: true, default: () => [] },
 })
 
-defineEmits(['edit', 'archive'])
+defineEmits(['edit', 'archive', 'delete'])
 
 const STATUT_COLORS = {
   preparation: '#1B3B8A',

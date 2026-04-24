@@ -16,7 +16,8 @@ class Tache extends Model
         'affectation_id', 'agent_id', 'statut',
         'note', 'photo_path',
         'latitude_pose', 'longitude_pose',
-        'realise_at', 'valide_at', 'valide_by',
+        'realise_at', 'valide_at',
+        // valide_by exclu : assigné uniquement via forceFill() dans TacheService
     ];
 
     protected $casts = [

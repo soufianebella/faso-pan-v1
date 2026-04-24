@@ -22,7 +22,8 @@ class StoreCampagneRequest extends FormRequest
             'annonceur'   => ['required', 'string', 'max:200'],
             'description' => ['nullable', 'string'],
             'date_debut'  => ['required', 'date', 'after_or_equal:today'],
-            'date_fin'    => ['required', 'date', 'after:date_debut'],
+            // after_or_equal : une campagne d'un seul jour est valide
+            'date_fin'    => ['required', 'date', 'after_or_equal:date_debut'],
             'affiche_path'=> ['nullable', 'string'],
             'face_ids'    => ['required', 'array', 'min:1'],
             'face_ids.*'  => [
@@ -64,7 +65,7 @@ class StoreCampagneRequest extends FormRequest
             'face_ids.*.exists'      => 'Une face selectionnee est invalide.',
             'face_ids.*.distinct'    => 'Une face ne peut pas etre selectionnee deux fois.',
             'date_debut.after_or_equal' => 'La date de debut ne peut pas etre dans le passe.',
-            'date_fin.after'         => 'La date de fin doit etre apres la date de debut.',
+            'date_fin.after_or_equal'   => 'La date de fin ne peut pas etre avant la date de debut.',
         ];
     }
 }

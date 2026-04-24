@@ -475,12 +475,12 @@ const confirm = ref({
 
 onMounted(() => store.fetchTaches())
 
-// ── Permissions ──────────────────────────────────────────────────────────────
+// ── Permissions 
 const isGestionnaire = computed(() =>
   ['super_admin', 'gestionnaire'].includes(auth.user?.role)
 )
 
-// ── Recherche frontend (filtre sur données chargées) ─────────────────────────
+// ── Recherche frontend (filtre sur données chargées) 
 const filteredTaches = computed(() => {
   if (!search.value.trim()) return taches.value
   const q = search.value.toLowerCase()
@@ -491,7 +491,7 @@ const filteredTaches = computed(() => {
   )
 })
 
-// ── KPI ──────────────────────────────────────────────────────────────────────
+// ── KPI 
 const kpi = computed(() => {
   const all       = taches.value
   const total     = all.length
@@ -501,7 +501,7 @@ const kpi = computed(() => {
   return { total, enCours, completion }
 })
 
-// ── Colonnes Kanban ───────────────────────────────────────────────────────────
+// ── Colonnes Kanban 
 const COLONNES_CONFIG = [
   { statut: 'en_attente', label: 'En attente', color: '#6B7280' },
   { statut: 'en_cours',   label: 'En cours',   color: '#F97316' },
@@ -516,14 +516,14 @@ const colonnes = computed(() =>
   }))
 )
 
-// ── Permissions ──────────────────────────────────────────────────────────────
+// ── Permissions 
 /** Agent connecté peut avancer sa propre tache si elle n'est pas terminée */
 function peutAvancer(tache) {
   return tache.agent?.id === auth.user?.id
     && ['en_attente', 'en_cours'].includes(tache.statut)
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// ── Helpers 
 const AVATAR_COLORS = ['#1B3B8A', '#F97316', '#7C3AED', '#0891B2', '#065F46', '#B45309']
 
 function initiales(name) {
@@ -592,7 +592,7 @@ function progressPct(tache) {
   return Math.min(95, Math.max(5, Math.round((elapsed / total) * 100)))
 }
 
-// ── Actions ───────────────────────────────────────────────────────────────────
+// ── Actions 
 function ouvrirCreation() {
   store.fetchAffectationsDisponibles()
   store.fetchAgents()

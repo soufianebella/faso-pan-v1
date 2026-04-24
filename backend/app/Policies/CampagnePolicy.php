@@ -30,4 +30,14 @@ class CampagnePolicy
     {
         return $user->can('assigner campagne');
     }
+
+    /**
+     * Suppression definitive : reservee aux campagnes deja expirees.
+     * Evite de supprimer par erreur une campagne active.
+     */
+    public function forceDelete(User $user, Campagne $campagne): bool
+    {
+        return $user->can('assigner campagne')
+            && $campagne->statut === 'expiree';
+    }
 }

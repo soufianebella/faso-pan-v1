@@ -5,5 +5,6 @@ export const campagnesApi = {
   getById:           (id)          => http.get(`/v1/campagnes/${id}`),
   create:            (data)        => http.post('/v1/campagnes', data),
   archive:           (id)          => http.delete(`/v1/campagnes/${id}`),
+  forceDelete:       (id)          => http.delete(`/v1/campagnes/${id}/force`),
   getAvailableFaces: (params = {}) => http.get('/v1/faces/disponibles', { params }),
 }

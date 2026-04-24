@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreTacheRequest extends FormRequest
 {
@@ -20,8 +21,9 @@ class StoreTacheRequest extends FormRequest
                 'required',
                 'integer',
                 'exists:affectations,id',
-                // Anti-doublon : une affectation = une seule tache
-                'unique:taches,affectation_id',
+                // Anti-doublon aligné sur SoftDeletes :
+                // une tache soft-deletée libère l'affectation (cohérent avec whereDoesntHave).
+                Rule::unique('taches', 'affectation_id')->whereNull('deleted_at'),
             ],
             'agent_id' => [
                 'nullable',

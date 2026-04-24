@@ -41,8 +41,9 @@ final class DisponibiliteService
         $facesOccupees = Affectation::chevauche($debut, $fin)
             ->select('face_id');
 
+        // Pas de filtre sur face.statut : une face 'occupee' peut être libre
+        // sur une période future. Le whereNotIn(chevauche) est la seule source de vérité.
         return Face::whereNotIn('id', $facesOccupees)
-            ->where('statut', 'libre')
             ->select([
                 'id', 'panneau_id', 'numero',
                 'largeur', 'hauteur', 'surface',
