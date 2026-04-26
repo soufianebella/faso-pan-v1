@@ -37,6 +37,7 @@ export const tachesApi = {
     })
   },
 
+  delete:   (id)       => http.delete(`/v1/taches/${id}`),
   assigner: (id, data) => http.patch(`/v1/taches/${id}/assigner`, data),
   getAgents:                  ()         => http.get('/v1/agents'),
   getAffectationsDisponibles: ()         => http.get('/v1/taches/affectations-disponibles'),

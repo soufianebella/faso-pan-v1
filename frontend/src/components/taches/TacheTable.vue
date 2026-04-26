@@ -126,6 +126,19 @@
               <i class="fa-solid fa-circle-check text-[10px]"></i> Valider
             </button>
 
+            <!-- Supprimer — gestionnaire uniquement, jamais sur validee -->
+            <button
+              v-if="isGestionnaire && tache.statut !== 'validee'"
+              @click="$emit('supprimer', tache.id)"
+              class="p-1.5 rounded transition-colors"
+              style="color: #9CA3AF"
+              title="Supprimer la tâche"
+              @mouseenter="$event.currentTarget.style.color='#EF4444'; $event.currentTarget.style.backgroundColor='#FEF2F2'"
+              @mouseleave="$event.currentTarget.style.color='#9CA3AF'; $event.currentTarget.style.backgroundColor=''"
+            >
+              <i class="fa-solid fa-trash-can text-sm"></i>
+            </button>
+
           </div>
         </td>
       </tr>
@@ -142,7 +155,7 @@ const props = defineProps({
   taches: { type: Array, required: true, default: () => [] },
 })
 
-defineEmits(['assigner', 'avancer', 'valider'])
+defineEmits(['assigner', 'avancer', 'valider', 'supprimer'])
 
 const auth = useAuthStore()
 

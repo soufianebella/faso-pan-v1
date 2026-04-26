@@ -33,6 +33,9 @@ class CampagneResource extends JsonResource
                     'face'       => $a->relationLoaded('face')
                         ? new FaceResource($a->face)
                         : null,
+                    'tache'      => $a->relationLoaded('tache') && $a->tache
+                        ? ['id' => $a->tache->id, 'statut' => $a->tache->statut]
+                        : null,
                 ])
             ),
 

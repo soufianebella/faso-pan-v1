@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Models\Affectation;
 use App\Models\Campagne;
 use App\Models\Face;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -93,6 +94,64 @@ class CampagneService
             $faceIds = $campagne->affectations()->pluck('face_id');
             Face::whereIn('id', $faceIds)
                 ->update(['statut' => 'libre']);
+        });
+    }
+
+    /**
+     * Met à jour en masse les statuts selon les dates du jour.
+     *
+     * Règles :
+     *   preparation|active → expiree  si date_fin  <  aujourd'hui
+     *   preparation        → active   si date_debut <= aujourd'hui
+     *                                ET date_fin   >= aujourd'hui
+     *
+     * Les campagnes déjà "expiree" ne sont jamais retouchées :
+     * whereIn(..., ['preparation', 'active']) les exclut explicitement.
+     *
+     * Retourne ['expires' => int, 'actives' => int].
+     */
+    public function syncStatuts(): array
+    {
+        $today = now()->toDateString();
+
+        return DB::transaction(function () use ($today) {
+
+            // ── 1. Expiration ──────────────────────────────────────────────
+            // Récupère les IDs avant l'UPDATE pour libérer les faces.
+            $idsAExpirer = Campagne::whereIn('statut', ['preparation', 'active'])
+                ->where('date_fin', '<', $today)
+                ->pluck('id');
+
+            $nbExpires = 0;
+
+            if ($idsAExpirer->isNotEmpty()) {
+                // Bulk UPDATE statut campagnes
+                Campagne::whereIn('id', $idsAExpirer)
+                    ->update(['statut' => 'expiree']);
+
+                // Libérer les faces associées
+                $faceIds = Affectation::whereIn('campagne_id', $idsAExpirer)
+                    ->pluck('face_id');
+
+                if ($faceIds->isNotEmpty()) {
+                    Face::whereIn('id', $faceIds)
+                        ->update(['statut' => 'libre']);
+                }
+
+                $nbExpires = $idsAExpirer->count();
+            }
+
+            // ── 2. Activation ──────────────────────────────────────────────
+            // Seulement les "preparation" : exclut les manuellement clôturées.
+            $nbActives = Campagne::where('statut', 'preparation')
+                ->where('date_debut', '<=', $today)
+                ->where('date_fin',   '>=', $today)
+                ->update(['statut' => 'active']);
+
+            return [
+                'expires' => $nbExpires,
+                'actives' => (int) $nbActives,
+            ];
         });
     }
 

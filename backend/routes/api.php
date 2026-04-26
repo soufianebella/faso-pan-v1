@@ -72,6 +72,7 @@ Route::prefix('v1')->group(function () {
             Route::post('/taches',                             [TacheController::class, 'store']);
             Route::get('/taches/affectations-disponibles',     [TacheController::class, 'affectationsDisponibles']);
             Route::patch('/taches/{tache}/assigner',           [TacheController::class, 'assigner']);
+            Route::delete('/taches/{tache}',                   [TacheController::class, 'destroy']);
             Route::get('/agents',                              [TacheController::class, 'agents']);
         });
 

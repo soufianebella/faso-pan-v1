@@ -108,6 +108,15 @@ class TacheService
         return $tache->fresh(['agent', 'affectation.face.panneau']);
     }
 
+    /**
+     * Supprime une tâche (soft delete).
+     * La Policy garantit que seules les tâches non-validées sont supprimables.
+     */
+    public function supprimer(Tache $tache): void
+    {
+        $tache->delete();
+    }
+
     public function assigner(Tache $tache, int $agentId): Tache
     {
         $tache->update(['agent_id' => $agentId]);

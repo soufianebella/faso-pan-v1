@@ -24,9 +24,26 @@ class CampagneController extends Controller
 
     public function index(IndexCampagneRequest $request): AnonymousResourceCollection
     {
+        // Garantit que les statuts sont à jour avant toute lecture,
+        // même si le scheduler n'a pas encore tourné.
+        $this->campagneService->syncStatuts();
+
         $campagnes = $this->campagneService->lister($request->validated());
 
-        return CampagneResource::collection($campagnes);
+        // Compteurs globaux (1 requête GROUP BY, indépendants du filtre actif)
+        $rawCounts = Campagne::selectRaw('statut, COUNT(*) as n')
+            ->groupBy('statut')
+            ->pluck('n', 'statut');
+
+        return CampagneResource::collection($campagnes)
+            ->additional([
+                'counts' => [
+                    'total'       => (int) $rawCounts->sum(),
+                    'active'      => (int) ($rawCounts['active']      ?? 0),
+                    'preparation' => (int) ($rawCounts['preparation'] ?? 0),
+                    'expiree'     => (int) ($rawCounts['expiree']     ?? 0),
+                ],
+            ]);
     }
 
     public function store(StoreCampagneRequest $request): JsonResponse

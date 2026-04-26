@@ -22,6 +22,7 @@ class FaceResource extends JsonResource
                 'id'        => $this->panneau->id,
                 'reference' => $this->panneau->reference,
                 'ville'     => $this->panneau->ville,
+                'quartier'  => $this->panneau->quartier,
             ]),
         ];
     }

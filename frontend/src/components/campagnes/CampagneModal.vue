@@ -14,7 +14,7 @@
         style="background-color: #F9FAFB; border-color: #E5E7EB"
       >
         <h2 class="font-bold text-lg" style="color: #1B3B8A">
-          Nouvelle campagne
+          {{ store.campagneActuelle?.id ? 'Modifier la campagne' : 'Nouvelle campagne' }}
         </h2>
         <button
           @click="$emit('close')"
@@ -217,6 +217,15 @@ const conflitErrors = computed(() => {
     .filter(k => k.startsWith('face_ids.'))
 })
 
+// Convertit "DD/MM/YYYY" → "YYYY-MM-DD" attendu par <input type="date">
+// Passthrough si le format est déjà YYYY-MM-DD (création)
+function toInputDate(val) {
+  if (!val) return ''
+  const parts = String(val).split('/')
+  if (parts.length === 3) return `${parts[2]}-${parts[1]}-${parts[0]}`
+  return val // déjà au bon format
+}
+
 // Watch critique sur les dates
 // Surveille campagneActuelle du store
 // pour pré-remplir le form en mode édition
@@ -224,13 +233,13 @@ watch(
   () => store.campagneActuelle,
   (campagne) => {
     if (campagne && campagne.id) {
-      // Mode édition — pré-remplir
+      // Mode édition — pré-remplir (conversion format pour input[type=date])
       form.value = {
         nom:         campagne.nom         ?? '',
         annonceur:   campagne.annonceur   ?? '',
         description: campagne.description ?? '',
-        date_debut:  campagne.date_debut  ?? '',
-        date_fin:    campagne.date_fin    ?? '',
+        date_debut:  toInputDate(campagne.date_debut),
+        date_fin:    toInputDate(campagne.date_fin),
         face_ids:    [],
       }
     } else {

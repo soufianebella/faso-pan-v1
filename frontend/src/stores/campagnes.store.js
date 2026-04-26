@@ -4,7 +4,7 @@ import { campagnesApi } from '@/api/campagnes.api'
 
 export const useCampagnesStore = defineStore('campagnes', () => {
 
-  // ── State 
+  // ── State
   const campagnes        = ref([])
   const campagneActuelle = ref(null)
   const facesDisponibles = ref([])
@@ -17,6 +17,14 @@ export const useCampagnesStore = defineStore('campagnes', () => {
     lastPage:    1,
     perPage:     15,
     total:       0,
+  })
+
+  // Compteurs globaux par statut (indépendants du filtre courant)
+  const counts = reactive({
+    total:       0,
+    active:      0,
+    preparation: 0,
+    expiree:     0,
   })
 
   const filtres = reactive({
@@ -45,6 +53,13 @@ export const useCampagnesStore = defineStore('campagnes', () => {
       pagination.lastPage    = response.meta.last_page
       pagination.perPage     = response.meta.per_page
       pagination.total       = response.meta.total
+
+      // Compteurs globaux inclus dans chaque réponse index
+      const c = response.counts ?? {}
+      counts.total       = c.total       ?? 0
+      counts.active      = c.active      ?? 0
+      counts.preparation = c.preparation ?? 0
+      counts.expiree     = c.expiree     ?? 0
 
     } finally {
       isLoading.value = false
@@ -152,6 +167,7 @@ export const useCampagnesStore = defineStore('campagnes', () => {
     errors,
     pagination,
     filtres,
+    counts,
     fetchCampagnes,
     fetchCampagne,
     fetchAvailableFaces,

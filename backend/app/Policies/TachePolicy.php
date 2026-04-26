@@ -60,6 +60,13 @@ class TachePolicy
             && $tache->statut === 'realisee';
     }
 
+    public function delete(User $user, Tache $tache): bool
+    {
+        // Une tâche validée est une preuve de travail — elle ne peut pas être supprimée.
+        return $user->can('taches.manage')
+            && $tache->statut !== 'validee';
+    }
+
     public function assigner(User $user, Tache $tache): bool
     {
         return $user->can('taches.manage');

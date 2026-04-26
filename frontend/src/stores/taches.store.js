@@ -157,6 +157,21 @@ export const useTachesStore = defineStore('taches', () => {
     }
   }
 
+  async function supprimerTache(id) {
+    isLoading.value = true
+    errors.value    = null
+    try {
+      await tachesApi.delete(id)
+      // Retire la tâche de la liste locale sans refetch
+      taches.value = taches.value.filter(t => t.id !== id)
+    } catch (err) {
+      if (err.response?.status === 422) errors.value = err.response.data.errors
+      throw err
+    } finally {
+      isLoading.value = false
+    }
+  }
+
   async function validerTache(id) {
     isLoading.value = true
     errors.value    = null
@@ -204,6 +219,7 @@ export const useTachesStore = defineStore('taches', () => {
     fetchAffectationsDisponibles,
     creerTache,
     avancerTache,
+    supprimerTache,
     validerTache,
     assignerAgent,
     updatePhoto,

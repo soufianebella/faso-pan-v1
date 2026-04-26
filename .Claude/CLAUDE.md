@@ -217,6 +217,8 @@ Session 12 : Anti double-booking (5/5 tests Postman)
 Session 13 : Transactions DB
 Session 14 : Frontend Campagnes — TERMINÉE
 Session 14b : RBAC Tâches — TERMINÉE
+Session 20b : Redesign UI Campagnes (KPI cards, drawer, grille/liste) — TERMINÉE
+Session 21 : Sync automatique statuts campagnes (Artisan + scheduler) — TERMINÉE
 - Filtrage par permission can() au lieu de hasRole()
 - Support complet Admin/Gestionnaire/Agent
 - Blocage Annonceur (403)
@@ -419,7 +421,104 @@ Session 21 : Préparation démo
 Session 20 : Tests finaux
 Session 21 : Préparation démo
 
-## 21. Session 20 — Code Review & Corrections — TERMINÉE
+## 21. Session 20b — Redesign UI Campagnes — TERMINÉE
+
+### Fonctionnalités livrées
+
+**Refonte complète de la page Campagnes (niveau SaaS premium)**
+- KPI row : 4 cards cliquables (Total / Actives / Préparation / Expirées)
+  avec barre colorée 4px en haut, icône, compteur, % du total
+  → filtre actif au clic (même comportement que les onglets)
+- Barre filtres fusionnée : `[recherche] | [onglets statut + badges] | [grille/liste]`
+  → onglet actif fond `#1B3B8A`, badges colorés par statut au repos
+- Vue grille (CampagneGrid.vue) : accent stripe 3px, actions hover-only,
+  icône `fa-building`, barre de progression orange toujours visible,
+  CTA ghost full-width navy
+- Vue liste (CampagneListe.vue) : nouvelle table, header navy, border-left
+  colorée par statut, mini barre de progression 80px, actions hover-only
+- CampagneDetailDrawer.vue : header navy + label "CAMPAGNE" orange +
+  badge sous le titre, sections Infos/KPIs/Affectations, footer hiérarchique
+  (Modifier orange / Voir tâches navy outline / Clôturer rouge outline),
+  fermeture via Échap, navigation vers `/taches` avec filtre campagne_id
+- Persistance vue grille/liste : `localStorage('campagnes_vue_mode')`
+- Compteurs KPI : `GROUP BY statut` en 1 requête + `->additional(['counts'])`
+  dans `CampagneController::index()`
+
+**Bugs résolus**
+- Dates absentes en mode édition : `CampagneResource` retourne `DD/MM/YYYY`
+  mais `<input type="date">` attend `YYYY-MM-DD` → fonction `toInputDate()`
+  dans le `watch` de `CampagneModal.vue`
+- Icônes KPI invisibles : `:class="'fa-solid fa-bullhorn'"` (espace dans string)
+  traité comme un seul token invalide → `class="fa-solid"` statique +
+  `:class="kpi.icon"` avec `icon: 'fa-bullhorn'` (nom seul)
+
+**Fichiers modifiés / créés**
+- `CampagnesView.vue` — refonte complète
+- `CampagneGrid.vue` — refonte complète
+- `CampagneListe.vue` — nouveau composant (vue tableau)
+- `CampagneDetailDrawer.vue` — refonte complète
+- `CampagneModal.vue` — fix dates + titre modal
+- `CampagneController.php` — ajout `->additional(['counts'])`
+- `CampagneResource.php` — ajout champ `tache` dans affectations
+- `FaceResource.php` — ajout `quartier` dans panneau whenLoaded
+- `campagnes.store.js` — ajout `counts` reactive + population depuis API
+
+### Règle Font Awesome ajoutée
+- `fa-solid` doit TOUJOURS être une classe statique dans le HTML
+- Ne jamais binder dynamiquement une string `'fa-solid fa-iconname'`
+  → séparer : `class="fa-solid"` + `:class="iconName"` où `iconName = 'fa-bullhorn'`
+
+---
+
+## 22. Session 21 — Sync Automatique Statuts Campagnes — TERMINÉE
+
+### Problème résolu
+Les statuts campagnes (preparation / active / expiree) n'étaient jamais
+mis à jour automatiquement selon les dates. Le Dashboard affichait
+toujours 0 campagnes "Actives".
+
+### Livraisons
+
+**`CampagneService::syncStatuts(): array`**
+- 2 requêtes `UPDATE` bulk (pas de boucle)
+- Ordre : expiration en premier (priorité), activation ensuite
+- Expiration : `whereIn('statut', ['preparation', 'active'])` +
+  `where('date_fin', '<', $today)` → `expiree` + faces → `libre`
+- Activation : `where('statut', 'preparation')` +
+  `where('date_debut', '<=', $today)` + `where('date_fin', '>=', $today)` → `active`
+- Protection clôtures manuelles : `where('statut', 'preparation')` exclut
+  explicitement toute campagne déjà `expiree` manuellement
+- Retourne `['expires' => int, 'actives' => int]`
+
+**`app/Console/Commands/SyncStatutsCampagnes.php`**
+- Commande : `php artisan campagnes:sync-statuts`
+- Injection `CampagneService` via constructeur
+- Affichage coloré : rouge pour expirées, vert pour activées
+
+**`CampagneController::index()`**
+- Appel `$this->campagneService->syncStatuts()` avant `lister()`
+- Garantit des statuts frais à chaque chargement de liste,
+  même sans scheduler actif
+
+**`bootstrap/app.php`**
+- `->withSchedule(fn (Schedule $s) => $s->command('campagnes:sync-statuts')->dailyAt('00:01'))`
+- Import `use Illuminate\Console\Scheduling\Schedule` ajouté
+
+### Règles techniques appliquées
+- `now()->toDateString()` pour la comparaison (jamais `whereDate()`)
+- `pluck('id')` avant `UPDATE` pour récupérer les IDs nécessaires à la
+  libération des faces (update() retourne un int, pas les IDs)
+- `DB::transaction()` sur l'ensemble du sync (atomicité)
+- Logique 100% dans le Service, le Controller délègue
+
+### Activation scheduler en production
+```
+* * * * * cd /var/www/fasopan && php artisan schedule:run >> /dev/null 2>&1
+```
+
+---
+
+## 23. Session 20 — Code Review & Corrections — TERMINÉE
 
 ### Corrections appliquées
 

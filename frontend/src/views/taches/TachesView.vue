@@ -153,11 +153,24 @@
             class="bg-white rounded-xl p-4 border shadow-sm"
             style="border-color: #E5E7EB"
           >
-            <!-- Référence panneau / face -->
-            <p class="text-[11px] font-semibold mb-1" style="color: #9CA3AF">
-              {{ tache.affectation?.face?.panneau?.reference ?? 'N/A' }}
-              / Face {{ tache.affectation?.face?.numero ?? '?' }}
-            </p>
+            <!-- Référence panneau / face + bouton supprimer -->
+            <div class="flex items-center justify-between mb-1">
+              <p class="text-[11px] font-semibold" style="color: #9CA3AF">
+                {{ tache.affectation?.face?.panneau?.reference ?? 'N/A' }}
+                / Face {{ tache.affectation?.face?.numero ?? '?' }}
+              </p>
+              <button
+                v-if="isGestionnaire && tache.statut !== 'validee'"
+                @click.stop="confirmerSuppression(tache.id)"
+                class="p-1 rounded transition-colors"
+                style="color: #D1D5DB"
+                title="Supprimer la tâche"
+                @mouseenter="$event.currentTarget.style.color='#EF4444'; $event.currentTarget.style.backgroundColor='#FEF2F2'"
+                @mouseleave="$event.currentTarget.style.color='#D1D5DB'; $event.currentTarget.style.backgroundColor=''"
+              >
+                <i class="fa-solid fa-trash-can text-[10px]"></i>
+              </button>
+            </div>
 
             <!-- Nom campagne -->
             <p class="text-base font-bold mb-2" style="color: #1C2833">
@@ -359,6 +372,7 @@
           @assigner="ouvrirModal"
           @avancer="confirmerAvancement"
           @valider="confirmerValidation"
+          @supprimer="confirmerSuppression"
         />
       </div>
 
@@ -695,6 +709,27 @@ function confirmerValidation(id) {
         toast.success('Tâche validée.')
       } catch (err) {
         toast.error(err.response?.data?.message ?? 'Erreur lors de la validation.')
+      }
+    },
+  }
+}
+
+function confirmerSuppression(id) {
+  const tache = taches.value.find(t => t.id === id)
+  if (!tache) return
+
+  confirm.value = {
+    show:    true,
+    title:   'Supprimer la tâche',
+    message: `Supprimer définitivement cette tâche ? L'affectation sera à nouveau disponible pour une nouvelle assignation.`,
+    variant: 'danger',
+    label:   'Supprimer',
+    action:  async () => {
+      try {
+        await store.supprimerTache(id)
+        toast.success('Tâche supprimée.')
+      } catch (err) {
+        toast.error(err.response?.data?.message ?? 'Erreur lors de la suppression.')
       }
     },
   }

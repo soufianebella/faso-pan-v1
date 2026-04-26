@@ -16,6 +16,7 @@ use App\Models\Tache;
 use App\Models\User;
 use App\Services\TacheService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Response;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class TacheController extends Controller
@@ -115,6 +116,15 @@ class TacheController extends Controller
         $tache = $this->tacheService->updatePhoto($tache, $request->file('photo'));
 
         return new TacheResource($tache);
+    }
+
+    public function destroy(Tache $tache): Response
+    {
+        $this->authorize('delete', $tache);
+
+        $this->tacheService->supprimer($tache);
+
+        return response()->noContent();
     }
 
     public function assigner(AssignerTacheRequest $request, Tache $tache): TacheResource
