@@ -34,6 +34,12 @@ class PanneauResource extends JsonResource
             ),
 
             'created_at' => $this->created_at?->format('d/m/Y'),
+            'created_at_full' => $this->created_at?->translatedFormat('d M Y'),
+
+            'createur' => $this->whenLoaded('createur', fn () => [
+                'id'   => $this->createur->id,
+                'name' => $this->createur->name,
+            ]),
         ];
     }
 }

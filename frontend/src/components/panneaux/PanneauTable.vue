@@ -116,13 +116,31 @@
             </span>
           </td>
 
-          <td class="p-4 text-right space-x-2">
+          <td class="p-4 text-right space-x-1">
+            <button
+              @click="$emit('detail', panneau.id)"
+              class="p-1.5 hover:bg-indigo-50 rounded transition-colors"
+              style="color: #1b3b8a"
+              title="Voir le détail"
+            >
+              <i class="fa-solid fa-eye text-sm"></i>
+            </button>
             <button
               @click="$emit('edit', panneau)"
               class="p-1.5 hover:bg-blue-50 rounded text-blue-600 transition-colors"
               title="Modifier"
             >
               <i class="fa-solid fa-pen-to-square"></i>
+            </button>
+            <button
+              @click="$emit('changer-statut', panneau)"
+              class="p-1.5 rounded transition-colors"
+              style="color: #9CA3AF"
+              title="Changer le statut"
+              @mouseenter="$event.currentTarget.style.color='#1B3B8A'; $event.currentTarget.style.backgroundColor='#EBF3FC'"
+              @mouseleave="$event.currentTarget.style.color='#9CA3AF'; $event.currentTarget.style.backgroundColor=''"
+            >
+              <i class="fa-solid fa-circle-half-stroke text-sm"></i>
             </button>
             <button
               @click="$emit('archive', panneau.id)"
@@ -149,7 +167,7 @@ defineProps({
   },
 });
 
-defineEmits(["edit", "archive"]);
+defineEmits(["edit", "archive", "changer-statut", "detail"]);
 
 // Gestion des classes CSS pour les badges de statut
 function getStatusClass(statut) {

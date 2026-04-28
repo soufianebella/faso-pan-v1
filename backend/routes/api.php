@@ -55,6 +55,11 @@ Route::prefix('v1')->group(function () {
             Route::apiResource('panneaux', PanneauController::class)
                 ->parameters(['panneaux' => 'panneau']);
 
+            // Sous-ressources panneau
+            Route::patch('/panneaux/{panneau}/statut',     [PanneauController::class, 'changerStatut']);
+            Route::get('/panneaux/{panneau}/historique',   [PanneauController::class, 'historique']);
+            Route::get('/panneaux/{panneau}/photos',       [PanneauController::class, 'photos']);
+
             Route::apiResource('campagnes', CampagneController::class)
                 ->parameters(['campagnes' => 'campagne']);
 

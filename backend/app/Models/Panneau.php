@@ -43,6 +43,11 @@ class Panneau extends Model
         return $this->hasMany(Face::class);
     }
 
+    public function etats(): HasMany
+    {
+        return $this->hasMany(PanneauEtat::class);
+    }
+
       public function createur(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');

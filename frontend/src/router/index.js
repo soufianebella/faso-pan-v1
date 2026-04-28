@@ -29,6 +29,11 @@ const routes = [
         component: () => import("@/views/panneaux/PanneauxView.vue"),
       },
       {
+        path: "panneaux/:id",
+        name: "panneau-detail",
+        component: () => import("@/views/panneaux/PanneauDetailView.vue"),
+      },
+      {
         path: "campagnes",
         name: "campagnes",
         component: () => import("@/views/campagnes/CampagnesView.vue"),
