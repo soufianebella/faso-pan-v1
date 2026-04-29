@@ -206,40 +206,57 @@
               </div>
             </template>
 
-            <!-- ── Réalisées : zone photo cliquable ── -->
+            <!-- ── Réalisées : miniature photo + zone upload ── -->
             <template v-else-if="col.statut === 'realisee'">
+
+              <!-- Avec photo : miniature h-32 + clic = lightbox -->
               <div
+                v-if="tache.photo_url"
+                class="relative rounded-lg mb-3 overflow-hidden group cursor-pointer"
+                style="height: 128px"
+                @click="lightboxUrl = tache.photo_url"
+                title="Cliquez pour agrandir"
+              >
+                <img
+                  :src="tache.photo_url"
+                  class="w-full h-full object-cover"
+                  alt="Photo pose"
+                />
+                <div
+                  class="absolute inset-0 flex items-center justify-center
+                         opacity-0 group-hover:opacity-100 transition-opacity"
+                  style="background-color: rgba(0,0,0,0.4)"
+                >
+                  <i class="fa-solid fa-magnifying-glass-plus text-white text-xl"></i>
+                </div>
+                <!-- Bouton remplacer discret -->
+                <button
+                  @click.stop="triggerPhotoUpload(tache)"
+                  class="absolute top-2 right-2 h-7 w-7 rounded-full flex items-center
+                         justify-center shadow-md transition-opacity opacity-0 group-hover:opacity-100"
+                  style="background-color: rgba(27,59,138,0.85); color: white"
+                  title="Remplacer la photo"
+                >
+                  <i class="fa-solid fa-camera text-[10px]"></i>
+                </button>
+              </div>
+
+              <!-- Sans photo : zone upload -->
+              <div
+                v-else
                 class="relative rounded-lg mb-3 overflow-hidden group cursor-pointer"
                 style="height: 80px"
                 @click="triggerPhotoUpload(tache)"
-                :title="tache.photo_url ? 'Cliquez pour remplacer la photo' : 'Cliquez pour ajouter la photo de pose'"
+                title="Cliquez pour ajouter la photo de pose"
               >
-                <!-- Sans photo : fond pointillé -->
                 <div
-                  v-if="!tache.photo_url"
-                  class="w-full h-full flex flex-col items-center justify-center gap-1 transition-colors group-hover:bg-blue-50"
+                  class="w-full h-full flex flex-col items-center justify-center gap-1
+                         transition-colors group-hover:bg-blue-50"
                   style="background-color: #F9FAFB; border: 1.5px dashed #E5E7EB; border-radius: 8px"
                 >
                   <i class="fa-solid fa-camera-retro text-xl" style="color: #D1D5DB"></i>
                   <span class="text-[10px] font-medium" style="color: #9CA3AF">Ajouter une photo</span>
                 </div>
-
-                <!-- Avec photo : miniature + overlay hover -->
-                <template v-else>
-                  <img
-                    :src="tache.photo_url"
-                    class="w-full h-full object-cover"
-                    alt="Photo pose"
-                  />
-                  <div
-                    class="absolute inset-0 flex flex-col items-center justify-center gap-1
-                           opacity-0 group-hover:opacity-100 transition-opacity"
-                    style="background-color: rgba(27,59,138,0.75)"
-                  >
-                    <i class="fa-solid fa-camera text-lg text-white"></i>
-                    <span class="text-[10px] font-semibold text-white">Remplacer</span>
-                  </div>
-                </template>
               </div>
 
             </template>
@@ -295,10 +312,12 @@
                   <button
                     v-if="peutAvancer(tache)"
                     @click="confirmerAvancement(tache.id)"
-                    class="flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-md transition-colors"
-                    style="background-color: #F3E8FF; color: #7C3AED"
+                    class="flex items-center gap-1.5 text-sm font-bold px-3 py-1.5 rounded-lg transition-colors text-white"
+                    style="background-color: #F97316"
+                    @mouseenter="$event.currentTarget.style.backgroundColor='#EA6C0A'"
+                    @mouseleave="$event.currentTarget.style.backgroundColor='#F97316'"
                   >
-                    <i class="fa-solid fa-check text-[9px]"></i> Realisee
+                    <i class="fa-solid fa-camera"></i> Photo &amp; Realiser
                   </button>
                   <span
                     class="flex items-center gap-1 text-xs font-semibold"
@@ -340,20 +359,19 @@
               Valide par {{ tache.valide_par.name }}
             </p>
 
-            <!-- Réalisées → bouton Valider la tache -->
+            <!-- Réalisées → bouton Valider direct (gestionnaire) -->
             <button
               v-if="col.statut === 'realisee' && isGestionnaire"
-              @click="confirmerValidation(tache.id)"
+              @click="validerDirectement(tache.id)"
               :disabled="isLoading"
               class="mt-3 w-full flex items-center justify-center gap-2 py-2
                      rounded-lg text-white text-sm font-bold transition-colors
                      disabled:opacity-50"
-              style="background-color: #1B3B8A"
-              @mouseover="$event.target.style.backgroundColor='#16306E'"
-              @mouseout="$event.target.style.backgroundColor='#1B3B8A'"
+              style="background-color: #27AE60"
+              @mouseenter="$event.currentTarget.style.backgroundColor='#219A52'"
+              @mouseleave="$event.currentTarget.style.backgroundColor='#27AE60'"
             >
-              Valider la tache
-              <i class="fa-solid fa-arrow-right text-xs"></i>
+              <i class="fa-solid fa-circle-check"></i> Valider
             </button>
 
           </div>
@@ -447,6 +465,29 @@
       @change="handlePhotoUpload"
     />
 
+    <!-- Lightbox plein écran -->
+    <div
+      v-if="lightboxUrl"
+      class="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style="background-color: rgba(0,0,0,0.92)"
+      @click="lightboxUrl = null"
+    >
+      <img
+        :src="lightboxUrl"
+        class="max-h-full max-w-full rounded-lg shadow-xl object-contain"
+        alt="Photo pose agrandie"
+        @click.stop
+      />
+      <button
+        @click="lightboxUrl = null"
+        class="absolute top-4 right-4 h-10 w-10 rounded-full flex items-center
+               justify-center transition-colors hover:bg-white/20"
+        style="background-color: rgba(255,255,255,0.12); color: white"
+      >
+        <i class="fa-solid fa-xmark text-lg"></i>
+      </button>
+    </div>
+
   </div>
 </template>
 
@@ -473,6 +514,7 @@ const showCreationModal  = ref(false)
 const showRealiserModal  = ref(false)
 const tacheARealiser     = ref(null)
 const photoUploadTacheId = ref(null)
+const lightboxUrl        = ref(null)
 const search             = ref('')
 
 const toast = useToast()
@@ -489,12 +531,12 @@ const confirm = ref({
 
 onMounted(() => store.fetchTaches())
 
-// ── Permissions 
+// ── Permissions
 const isGestionnaire = computed(() =>
   ['super_admin', 'gestionnaire'].includes(auth.user?.role)
 )
 
-// ── Recherche frontend (filtre sur données chargées) 
+// ── Recherche frontend (filtre sur données chargées)
 const filteredTaches = computed(() => {
   if (!search.value.trim()) return taches.value
   const q = search.value.toLowerCase()
@@ -505,7 +547,7 @@ const filteredTaches = computed(() => {
   )
 })
 
-// ── KPI 
+// ── KPI
 const kpi = computed(() => {
   const all       = taches.value
   const total     = all.length
@@ -515,7 +557,7 @@ const kpi = computed(() => {
   return { total, enCours, completion }
 })
 
-// ── Colonnes Kanban 
+// ── Colonnes Kanban
 const COLONNES_CONFIG = [
   { statut: 'en_attente', label: 'En attente', color: '#6B7280' },
   { statut: 'en_cours',   label: 'En cours',   color: '#F97316' },
@@ -530,14 +572,14 @@ const colonnes = computed(() =>
   }))
 )
 
-// ── Permissions 
+// ── Permissions
 /** Agent connecté peut avancer sa propre tache si elle n'est pas terminée */
 function peutAvancer(tache) {
   return tache.agent?.id === auth.user?.id
     && ['en_attente', 'en_cours'].includes(tache.statut)
 }
 
-// ── Helpers 
+// ── Helpers
 const AVATAR_COLORS = ['#1B3B8A', '#F97316', '#7C3AED', '#0891B2', '#065F46', '#B45309']
 
 function initiales(name) {
@@ -606,7 +648,7 @@ function progressPct(tache) {
   return Math.min(95, Math.max(5, Math.round((elapsed / total) * 100)))
 }
 
-// ── Actions 
+// ── Actions
 function ouvrirCreation() {
   store.fetchAffectationsDisponibles()
   store.fetchAgents()
@@ -694,6 +736,15 @@ async function handleRealiserSaved() {
   fermerRealiserModal()
   toast.success('Tâche marquée comme réalisée.')
   await store.fetchTaches(pagination.value.currentPage)
+}
+
+async function validerDirectement(id) {
+  try {
+    await store.avancerTache(id)
+    toast.success('Tâche validée.')
+  } catch (err) {
+    toast.error(err.response?.data?.message ?? 'Erreur lors de la validation.')
+  }
 }
 
 function confirmerValidation(id) {

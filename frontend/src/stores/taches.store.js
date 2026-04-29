@@ -193,6 +193,24 @@ export const useTachesStore = defineStore('taches', () => {
     }
   }
 
+  /**
+   * Valide plusieurs tâches en parallèle (Promise.all).
+   * Recharge la liste complète après succès pour garantir la cohérence.
+   */
+  async function validerEnMasse(ids) {
+    isLoading.value = true
+    errors.value    = null
+    try {
+      await Promise.all(ids.map(id => tachesApi.avancer(id)))
+      await fetchTaches(pagination.currentPage)
+    } catch (err) {
+      if (err.response?.status === 422) errors.value = err.response.data.errors
+      throw err
+    } finally {
+      isLoading.value = false
+    }
+  }
+
   function setTacheActuelle(tache) {
     tacheActuelle.value = tache
     errors.value        = null
@@ -202,7 +220,7 @@ export const useTachesStore = defineStore('taches', () => {
     errors.value = null
   }
 
-  // ── Return 
+  // ── Return
 
   return {
     taches,
@@ -221,6 +239,7 @@ export const useTachesStore = defineStore('taches', () => {
     avancerTache,
     supprimerTache,
     validerTache,
+    validerEnMasse,
     assignerAgent,
     updatePhoto,
     setTacheActuelle,

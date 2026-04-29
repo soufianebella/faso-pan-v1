@@ -4,7 +4,7 @@
     style="background-color: rgba(15,23,42,0.7)"
     @click.self="$emit('close')"
   >
-    <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-md">
 
       <!-- Header -->
       <div
@@ -46,118 +46,80 @@
         </div>
       </div>
 
-      <!-- Corps -->
-      <div class="p-6 space-y-5">
+      <!-- Zone 1 — Upload photo -->
+      <div class="p-6 pb-4">
 
-        <!-- Upload photo -->
-        <div class="space-y-1">
-          <label class="text-xs font-bold uppercase tracking-wider" style="color: #6B7280">
-            Photo de la pose <span style="color: #EF4444">*</span>
-          </label>
+        <!-- Dropzone vide -->
+        <div
+          v-if="!previewUrl"
+          class="border-2 border-dashed rounded-xl flex flex-col items-center justify-center cursor-pointer transition-colors"
+          style="height: 192px; border-color: #E5E7EB"
+          :style="photoError ? 'border-color: #EF4444' : ''"
+          @click="$refs.fileInput.click()"
+          @dragover.prevent
+          @drop.prevent="handleDrop"
+          @mouseenter="$event.currentTarget.style.borderColor = photoError ? '#EF4444' : '#F97316'"
+          @mouseleave="$event.currentTarget.style.borderColor = photoError ? '#EF4444' : '#E5E7EB'"
+        >
+          <i class="fa-solid fa-camera text-4xl mb-3" style="color: #6B7280"></i>
+          <p class="text-sm font-semibold" style="color: #1C2833">Cliquez pour prendre une photo</p>
+          <p class="text-xs mt-1" style="color: #9CA3AF">JPEG, PNG, WEBP — max 5 Mo</p>
+        </div>
 
-          <!-- Zone dropzone / preview -->
-          <div v-if="!previewUrl"
-            class="border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors"
-            :style="photoError ? 'border-color: #EF4444' : 'border-color: #E5E7EB'"
-            @click="$refs.fileInput.click()"
-            @dragover.prevent
-            @drop.prevent="handleDrop"
+        <!-- Preview photo sélectionnée -->
+        <div
+          v-else
+          class="relative rounded-xl overflow-hidden"
+          style="height: 192px"
+        >
+          <img :src="previewUrl" alt="Preview" class="w-full h-full object-cover" />
+          <button
+            type="button"
+            @click="resetPhoto"
+            class="absolute top-2 right-2 h-8 w-8 rounded-full flex items-center justify-center shadow-md"
+            style="background-color: rgba(239,68,68,0.9); color: white"
+            title="Changer la photo"
           >
-            <i class="fa-solid fa-cloud-arrow-up text-3xl mb-2" style="color: #1B3B8A"></i>
-            <p class="text-sm font-semibold" style="color: #1C2833">
-              Cliquez ou glissez une image ici
-            </p>
-            <p class="text-xs mt-1" style="color: #6B7280">
-              JPEG, PNG, WEBP — max 5 Mo
-            </p>
+            <i class="fa-solid fa-xmark text-xs"></i>
+          </button>
+          <div
+            class="absolute bottom-0 left-0 right-0 px-3 py-1.5 text-xs flex justify-between"
+            style="background-color: rgba(0,0,0,0.6); color: white"
+          >
+            <span class="truncate">{{ fileName }}</span>
+            <span>{{ fileSize }}</span>
           </div>
-
-          <div v-else class="relative rounded-lg overflow-hidden border" style="border-color: #E5E7EB">
-            <img :src="previewUrl" alt="Preview" class="w-full h-56 object-cover" />
-            <button
-              type="button"
-              @click="resetPhoto"
-              class="absolute top-2 right-2 h-8 w-8 rounded-full flex items-center justify-center shadow-md"
-              style="background-color: rgba(239,68,68,0.9); color: white"
-              title="Retirer la photo"
-            >
-              <i class="fa-solid fa-trash text-xs"></i>
-            </button>
-            <div
-              class="absolute bottom-0 left-0 right-0 px-3 py-1.5 text-xs flex justify-between"
-              style="background-color: rgba(0,0,0,0.6); color: white"
-            >
-              <span class="truncate">{{ fileName }}</span>
-              <span>{{ fileSize }}</span>
-            </div>
-          </div>
-
-          <input
-            ref="fileInput"
-            type="file"
-            accept="image/jpeg,image/jpg,image/png,image/webp"
-            class="hidden"
-            @change="handleFileChange"
-          />
-
-          <p v-if="photoError" class="text-xs mt-1" style="color: #EF4444">
-            {{ photoError }}
-          </p>
-          <p v-else-if="errors?.photo" class="text-xs mt-1" style="color: #EF4444">
-            {{ errors.photo[0] }}
-          </p>
         </div>
 
-        <!-- Note -->
-        <div class="space-y-1">
-          <label class="text-xs font-bold uppercase tracking-wider" style="color: #6B7280">
-            Note
-            <span class="font-normal normal-case ml-1" style="color: #9CA3AF">(optionnel)</span>
-          </label>
-          <textarea
-            v-model="note"
-            rows="2"
-            placeholder="Observations terrain, difficultes rencontrees..."
-            class="w-full border rounded-lg px-3 py-2 text-sm outline-none resize-none"
-            style="border-color: #E5E7EB"
-            @focus="$event.target.style.borderColor='#F97316'"
-            @blur="$event.target.style.borderColor='#E5E7EB'"
-          ></textarea>
-        </div>
+        <input
+          ref="fileInput"
+          type="file"
+          accept="image/jpeg,image/jpg,image/png,image/webp"
+          class="hidden"
+          @change="handleFileChange"
+        />
 
-        <!-- GPS (auto, silencieux) -->
-        <div v-if="gps.latitude" class="flex items-center gap-2 text-xs" style="color: #6B7280">
-          <i class="fa-solid fa-location-dot" style="color: #27AE60"></i>
-          Position GPS capturee : {{ gps.latitude.toFixed(5) }}, {{ gps.longitude.toFixed(5) }}
-        </div>
+        <p v-if="photoError" class="text-xs mt-2" style="color: #EF4444">{{ photoError }}</p>
+        <p v-else-if="errors?.photo" class="text-xs mt-2" style="color: #EF4444">{{ errors.photo[0] }}</p>
 
       </div>
 
-      <!-- Footer -->
-      <div
-        class="p-4 border-t rounded-b-xl flex justify-end items-center gap-3"
-        style="background-color: #F9FAFB; border-color: #E5E7EB"
-      >
-        <button
-          type="button"
-          @click="$emit('close')"
-          class="px-4 py-2 text-sm font-semibold rounded-lg transition-colors hover:bg-slate-100"
-          style="color: #374151"
-        >
-          Annuler
-        </button>
-
+      <!-- Zone 2 — Bouton soumettre pleine largeur -->
+      <div class="px-6 pb-6">
         <button
           type="button"
           @click="handleSubmit"
           :disabled="isLoading || !photo"
-          class="px-6 py-2 rounded-lg text-white text-sm font-bold shadow-sm transition-all
-                 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          class="w-full flex items-center justify-center gap-2 py-3 rounded-lg text-white
+                 text-sm font-bold shadow-sm transition-colors
+                 disabled:opacity-50 disabled:cursor-not-allowed"
           style="background-color: #F97316"
+          @mouseenter="$event.currentTarget.style.backgroundColor='#EA6C0A'"
+          @mouseleave="$event.currentTarget.style.backgroundColor='#F97316'"
         >
           <i v-if="isLoading" class="fa-solid fa-circle-notch animate-spin"></i>
-          <i v-else class="fa-solid fa-check text-xs"></i>
-          Confirmer la realisation
+          <i v-else class="fa-solid fa-check"></i>
+          Marquer comme realisee
         </button>
       </div>
 
@@ -183,14 +145,13 @@ const photo       = ref(null)
 const previewUrl  = ref(null)
 const fileName    = ref('')
 const fileSize    = ref('')
-const note        = ref('')
 const photoError  = ref(null)
 const gps         = ref({ latitude: null, longitude: null })
 
-const MAX_SIZE_MB      = 5
-const ACCEPTED_MIMES   = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
+const MAX_SIZE_MB    = 5
+const ACCEPTED_MIMES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
 
-// ── GPS capture silencieuse au montage
+// ── GPS capturé silencieusement — envoyé avec la photo si disponible
 onMounted(() => {
   if (!navigator.geolocation) return
   navigator.geolocation.getCurrentPosition(
@@ -198,7 +159,7 @@ onMounted(() => {
       gps.value.latitude  = pos.coords.latitude
       gps.value.longitude = pos.coords.longitude
     },
-    () => { /* refus utilisateur — on ignore, c'est optionnel */ },
+    () => { /* refus utilisateur — optionnel, on ignore */ },
     { timeout: 5000, maximumAge: 60000 }
   )
 })
@@ -261,14 +222,14 @@ async function handleSubmit() {
   try {
     await store.avancerTache(props.tache.id, {
       photo:          photo.value,
-      note:           note.value || null,
+      note:           null,
       latitude_pose:  gps.value.latitude,
       longitude_pose: gps.value.longitude,
     })
     emit('saved')
   } catch (err) {
     if (err.response?.status !== 422) {
-      alert(err.response?.data?.message ?? 'Erreur lors de la soumission.')
+      photoError.value = err.response?.data?.message ?? 'Erreur lors de la soumission.'
     }
   }
 }
